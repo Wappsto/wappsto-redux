@@ -15,7 +15,7 @@ export const getEntities = (state, type, options = {}) => {
   if(options.parent){
     result = [];
     let parent = getEntity(state, options.parent.type, options.parent.id);
-    if(parent && state.entities[name]){
+    if(parent && state.entities[name] && parent[type]){
       parent[type].forEach((id) => {
         let found = state.entities[name][id];
         if(found){
