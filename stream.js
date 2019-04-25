@@ -41,6 +41,7 @@ export async function initializeStream(store, streamJSON = {}, session) {
       _startStream(stream, session);
     }
   } catch(e){
+    console.log("failed to initializeStream");
     console.log(e);
   }
 }
