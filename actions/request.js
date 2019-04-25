@@ -1,6 +1,8 @@
 import querystring from "querystring";
 
-import config from "../config.json";
+import { _request } from "../index";
+
+import config from "../config";
 import { isUUID, getUrlInfo } from "../util/helpers";
 import { addEntities, removeEntities } from "./entities";
 import { addSession, invalidSession, removeSession } from "./session";
@@ -28,7 +30,8 @@ function getOptions(method, url, data, options, sessionJSON){
   if(["PUT" , "PATCH", "POST"].indexOf(method) !== -1){
     requestOptions.body = JSON.stringify(data);
   }
-  return [getUrl(url, options.query), requestOptions];
+  requestOptions.url = getUrl(url, options.query);
+  return requestOptions;
 }
 
 function requestPending(method, url, body, options) {
@@ -97,6 +100,10 @@ function dispatchMethodAction(dispatch, method, url, json, options){
 
 export function makeRequest(method, url, data, options = {}) {
   return (dispatch, getStore) => {
+    if(!_request){
+      console.log("request function is not set");
+      return;
+    }
     method = method.toUpperCase();
     let store = getStore();
     if(store.request[url] && store.request[url].status === "pending"){
@@ -104,38 +111,21 @@ export function makeRequest(method, url, data, options = {}) {
       return;
     }
     dispatch(requestPending(method, url, data, options));
-    // console.log(getOptions(method, url, data, options));
-    return fetch(...getOptions(method, url, data, options, store.session))
-      .then(response => {
-        if(!response.ok){
-          throw response;
-        }
-        return response.json();
-      })
-      .then(json => {
+    let requestOptions = getOptions(method, url, data, options, store.session);
+    // console.log(requestOptions);
+    return _request(
+      requestOptions,
+      (json) => {
         dispatchMethodAction(dispatch, method, url, json, options);
         dispatch(requestSuccess(method, url, json, options));
-      })
-      .catch(response => {
-        if(response.status !== 503){
-          try{
-            response.json()
-            .then(json => {
-              if(json.code === 9900025){
-                dispatch(invalidSession());
-              }
-              dispatch(requestError(method, url, response.status, json, options));
-            })
-            .catch(() => {
-              dispatch(requestError(method, url, response.status, null, options));
-            });
-          } catch(e) {
-            dispatch(requestError(method, url, response.status, null, options));
-          }
-        } else {
-          dispatch(requestError(method, url, response.status, null, options));
+      },
+      (status, json = {}) => {
+        if(json.code === 9900025){
+          dispatch(invalidSession());
         }
-      })
+        dispatch(requestError(method, url, status, json, options));
+      }
+    )
   };
 }
 

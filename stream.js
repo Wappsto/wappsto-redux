@@ -1,4 +1,4 @@
-import config from "./config.json";
+import config from "./config";
 import { getServiceFromUrl } from "./util/helpers";
 import { addEntities, removeEntities } from "./actions/entities";
 
