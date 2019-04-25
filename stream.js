@@ -8,7 +8,7 @@ export function useStore(configuredStore){
   store = configuredStore;
 }
 
-export async function initializeStream(store, streamJSON = {}, session) {
+export async function initializeStream(streamJSON = {}, session) {
   let headers = { "x-session": session };
   let url = config.baseUrl + "/stream?expand=0";
   if(streamJSON.name){
