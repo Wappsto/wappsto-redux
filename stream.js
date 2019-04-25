@@ -1,9 +1,14 @@
-import { store } from "./navigation";
 import config from "./config.json";
 import { getServiceFromUrl } from "./util/helpers";
 import { addEntities, removeEntities } from "./actions/entities";
 
-export async function initializeStream(streamJSON = {}, session) {
+let store;
+
+export function useStore(configuredStore){
+  store = configuredStore;
+}
+
+export async function initializeStream(store, streamJSON = {}, session) {
   let headers = { "x-session": session };
   let url = config.baseUrl + "/stream?expand=0";
   if(streamJSON.name){
