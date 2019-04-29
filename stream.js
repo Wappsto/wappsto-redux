@@ -1,6 +1,7 @@
 import config from "./config";
 import { getServiceFromUrl } from "./util/helpers";
 import { addEntities, removeEntities } from "./actions/entities";
+import schemaTree from "./util/schemaTree.json";
 
 let store;
 
@@ -80,6 +81,19 @@ async function _createStream(streamJSON, session) {
   return json;
 }
 
+function addChildren(message, state){
+  let type = message.meta_object.type;
+  let data = message[type];
+  if(schemaTree[type] && schemaTree[type].dependencies){
+    let cachedData = state.entities[schemaTree[type].name][data.meta.id];
+    if(cachedData){
+      schemaTree[type].dependencies.forEach(({key}) => {
+        data[key] = cachedData[key];
+      });
+    }
+  }
+}
+
 function _startStream(stream, session){
   let url = config.baseUrl + "/stream/" + stream.meta.id + "?x-session=" + session;
   let ws = new WebSocket(url);
@@ -93,11 +107,14 @@ function _startStream(stream, session){
     try{
       let data = JSON.parse(e.data);
       data.forEach(message => {
+        let state = store.getState();
+
+        // since stream does not have child list, I'm going to add it from cached store state
+        addChildren(message, state);
         switch(message.event){
           case "create":
             if(message.meta_object.type === "state"){
-              let state = store.getState();
-              if(state.entities.states.hasOwnProperty(message.meta_object.id)){
+              if(schemaTree.state && schemaTree.state.name && state.entities[schemaTree.state.name].hasOwnProperty(message.meta_object.id)){
                 store.dispatch(addEntities(message.meta_object.type, message[message.meta_object.type], { reset: false }));
               } else {
                 let { parent } = getUrlInfo(message.path, 1);
