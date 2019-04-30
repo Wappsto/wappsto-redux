@@ -86,11 +86,9 @@ function addChildren(message, state){
   let data = message[type];
   if(schemaTree[type] && schemaTree[type].dependencies){
     let cachedData = state.entities[schemaTree[type].name][data.meta.id];
-    if(cachedData){
-      schemaTree[type].dependencies.forEach(({key}) => {
-        data[key] = cachedData[key];
-      });
-    }
+    schemaTree[type].dependencies.forEach(({key, type}) => {
+      data[key] = cachedData ? cachedData[key] : ( type === "many" ? [] : undefined );
+    });
   }
 }
 
@@ -110,9 +108,9 @@ function _startStream(stream, session){
         let state = store.getState();
         switch(message.event){
           case "create":
+            // since stream does not have child list, I'm going to add it from cached store state
+            addChildren(message, state);
             if(message.meta_object.type === "state"){
-              // since stream does not have child list, I'm going to add it from cached store state
-              addChildren(message, state);
               if(schemaTree.state && schemaTree.state.name && state.entities[schemaTree.state.name].hasOwnProperty(message.meta_object.id)){
                 store.dispatch(addEntities(message.meta_object.type, message[message.meta_object.type], { reset: false }));
               } else {
