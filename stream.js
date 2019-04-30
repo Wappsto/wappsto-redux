@@ -108,12 +108,11 @@ function _startStream(stream, session){
       let data = JSON.parse(e.data);
       data.forEach(message => {
         let state = store.getState();
-
-        // since stream does not have child list, I'm going to add it from cached store state
-        addChildren(message, state);
         switch(message.event){
           case "create":
             if(message.meta_object.type === "state"){
+              // since stream does not have child list, I'm going to add it from cached store state
+              addChildren(message, state);
               if(schemaTree.state && schemaTree.state.name && state.entities[schemaTree.state.name].hasOwnProperty(message.meta_object.id)){
                 store.dispatch(addEntities(message.meta_object.type, message[message.meta_object.type], { reset: false }));
               } else {
@@ -126,10 +125,13 @@ function _startStream(stream, session){
             }
             break;
           case "update":
+            // since stream does not have child list, I'm going to add it from cached store state
+            addChildren(message, state);
             store.dispatch(addEntities(message.meta_object.type, message[message.meta_object.type], { reset: false }));
             break;
           case "delete":
-            store.dispatch(removeEntities(message.meta_object.type, [message.meta_object.id]));
+            let { parent } = getUrlInfo(message.path, 1);
+            store.dispatch(removeEntities(message.meta_object.type, [message.meta_object.id]), { parent });
             break;
         }
       })
