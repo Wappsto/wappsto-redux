@@ -24,8 +24,8 @@ function getActionState(action, state, status){
 export default (state = initialState, action) => {
   switch(action.type){
     case REQUEST_PENDING:
-      delete state.errors[action.method + "_" + action.url];
       state = getActionState(action, state, "pending");
+      delete state.errors[action.method + "_" + action.url];
       state[action.url].body = action.body;
       return state;
     case REQUEST_SUCCESS:
