@@ -85,7 +85,7 @@ function addChildren(message, state){
   let type = message.meta_object.type;
   let data = message[type];
   if(schemaTree[type] && schemaTree[type].dependencies){
-    let cachedData = state.entities[schemaTree[type].name][data.meta.id];
+    let cachedData = state.entities[schemaTree[type].name] && state.entities[schemaTree[type].name][data.meta.id];
     schemaTree[type].dependencies.forEach(({key, type}) => {
       data[key] = cachedData ? cachedData[key] : ( type === "many" ? [] : undefined );
     });
@@ -134,7 +134,7 @@ function _startStream(stream, session){
         }
       })
     } catch(e){
-
+      console.log("stream catch", e);
     }
   };
 
