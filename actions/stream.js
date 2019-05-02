@@ -125,9 +125,6 @@ function _startStream(stream, session, getState, dispatch){
   dispatch(updateStream(stream.name, status.CONNECTING, steps.CONNECTING.OPENING_SOCKET, ws));
 
   ws.onopen = () => {
-    //dispatch connection opened
-    console.log("STATUSSSSSSSSSSSSSSSSS");
-    console.log(status.OPEN);
     dispatch(updateStream(stream.name, status.OPEN, null, ws));
     console.log('Stream open: ' + url);
   };

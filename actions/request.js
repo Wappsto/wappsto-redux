@@ -119,7 +119,7 @@ export function makeRequest(method, url, data, options = {}) {
       dispatchMethodAction(dispatch, method, url, response.json, options);
       dispatch(requestSuccess(method, url, response.status, response.json, options));
     } else {
-      if(json.code === 9900025){
+      if(response.json.code === 9900025){
         dispatch(invalidSession());
       }
       dispatch(requestError(method, url, response.status, response.json, options));
