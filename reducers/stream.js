@@ -5,36 +5,28 @@ const initialState = {};
 export default (state = initialState, action) => {
   switch(action.type){
     case UPDATE_STREAM:
-      state = Object.assign({}, state);
       switch(action.status){
         case status.RECONNECTING:
+          state = Object.assign({}, state);
           let count = state[action.name].count || 0;
-          if(action.retryTimeout){
+          if(action.increment){
             count++;
           }
-          var retryTimeout = action.retryTimeout || state[action.name].retryTimeout;
-          let lostTimeout = action.lostTimout || state[action.name].lostTimeout;
           state[action.name] = {
             name: action.name,
             status: action.status,
             step: action.step,
             ws: action.ws,
-            retryTimeout,
-            lostTimeout,
             count
           }
           break;
         case status.LOST:
-          var retryTimeout = action.retryTimeout || state[action.name].retryTimeout;
-          clearTimeout(retryTimeout);
+          state = Object.assign({}, state);
           state[action.name].status = action.status;
           state[action.name].json = action.json
           break;
-        case status.CLOSED:
-        case status.OPEN:
-          clearTimeout(state[action.name].retryTimeout);
-          clearTimeout(state[action.name].lostTimeout);
         default:
+          state = Object.assign({}, state);
           state[action.name] = {
             name: action.name,
             status: action.status,

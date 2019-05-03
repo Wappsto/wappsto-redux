@@ -13,6 +13,8 @@ export const REMOVE_STREAM = 'REMOVE_STREAM';
 const lostTimer = 1000 * 60;
 const retryTimer = 1000 * 5;
 
+let timeouts = {};
+
 //add also connection lost and timer of 5 minutes of waiting in general
 export const status = {
   CONNECTING: 1,
@@ -33,16 +35,15 @@ export const steps = {
   }
 }
 
-export function updateStream(name, status, step, ws, retryTimeout, lostTimout, json){
+export function updateStream(name, status, step, ws, json, increment){
   return {
     type: UPDATE_STREAM,
     name,
     status,
     step,
     ws,
-    retryTimeout,
-    lostTimout,
-    json
+    json,
+    increment
   }
 }
 
@@ -62,10 +63,15 @@ export function openStream(streamJSON = {}, session){
 export function closeStream(name){
   return (dispatch, getState) => {
     let state = getState();
-    if(state.stream && state.stream[name] && state.stream[name].ws){
-      state.stream[name].ws.close();
-      clearTimeout(state.stream[name].timeout);
-      dispatch(removeStream(name));
+    if(state.stream && state.stream[name]){
+      if(timeouts[stream.name]){
+        _clearStreamTimeouts(stream);
+      }
+      if(state.stream[name].ws){
+        state.stream[name].ws.close();
+        clearTimeout(state.stream[name].timeout);
+        dispatch(removeStream(name));
+      }
     }
   };
 }
@@ -121,6 +127,12 @@ function _addChildren(message, state){
   }
 }
 
+function _clearStreamTimeouts(stream){
+  clearTimeout(timeouts[stream.name].retryTimeout);
+  clearTimeout(timeouts[stream.name].lostTimeout);
+  delete timeouts[stream.name];
+}
+
 function _startStream(stream, session, getState, dispatch, reconnecting){
   let url;
   if(stream.meta.id){
@@ -133,6 +145,9 @@ function _startStream(stream, session, getState, dispatch, reconnecting){
   dispatch(updateStream(stream.name, reconnecting ? status.RECONNECTING : status.CONNECTING, steps.CONNECTING.OPENING_SOCKET, ws));
 
   ws.onopen = () => {
+    if(timeouts[stream.name]){
+      _clearStreamTimeouts(stream);
+    }
     dispatch(updateStream(stream.name, status.OPEN, null, ws));
     console.log('Stream open: ' + url);
   };
@@ -182,18 +197,23 @@ function _startStream(stream, session, getState, dispatch, reconnecting){
   ws.onclose = (e) => {
     console.log('Stream close: ' + url);
     if(e.code !== 4001){
-      let lostTimeout;
+      if(!timeouts[stream.name]){
+        timeouts[stream.name] = {};
+      }
       let retryTimeout = setTimeout(() => {
         _startStream(stream, session, getState, dispatch, true);
       }, retryTimer);
+      timeouts[stream.name].retryTimeout = retryTimeout;
       if(!reconnecting){
-        lostTimeout = setTimeout(() => {
-          dispatch(updateStream(stream.name, status.LOST, null, null, null, null, stream));
+        let lostTimeout = setTimeout(() => {
+          _clearStreamTimeouts(stream);
+          dispatch(updateStream(stream.name, status.LOST, null, null, stream));
         }, lostTimer);
+        timeouts[stream.name].lostTimeout = lostTimeout;
       }
-      dispatch(updateStream(stream.name, status.RECONNECTING, steps.CONNECTING.WAITING, ws, retryTimeout, lostTimeout));
+      dispatch(updateStream(stream.name, status.RECONNECTING, steps.CONNECTING.WAITING, ws, null, true));
     } else {
-      dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, null, null, stream));
+      dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, stream));
     }
   };
 }
