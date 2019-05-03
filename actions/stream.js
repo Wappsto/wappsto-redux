@@ -8,35 +8,41 @@ import { addEntities, removeEntities } from './entities';
 import schemaTree from '../util/schemaTree.json';
 
 export const UPDATE_STREAM = 'UPDATE_STREAM';
+export const REMOVE_STREAM = 'REMOVE_STREAM';
 
-const status = {
+const lostTimer = 1000 * 60;
+const retryTimer = 1000 * 5;
+
+//add also connection lost and timer of 5 minutes of waiting in general
+export const status = {
   CONNECTING: 1,
   OPEN: 2,
   CLOSED: 3,
   RECONNECTING: 4,
-  ERROR: 5
+  ERROR: 5,
+  LOST: 6
 };
 
-const steps = {
+export const steps = {
   CONNECTING: {
     GET_STREAM: 1,
     CREATE_STREAM: 2,
     UPDATE_STREAM: 3,
-    OPENING_SOCKET: 4
-  },
-  CLOSED: {
-    USER: 1,
-    SESSION_EXPIRED: 2
+    OPENING_SOCKET: 4,
+    WAITING: 5
   }
 }
 
-export function updateStream(name, status, step, ws){
+export function updateStream(name, status, step, ws, retryTimeout, lostTimout, json){
   return {
     type: UPDATE_STREAM,
     name,
     status,
     step,
-    ws
+    ws,
+    retryTimeout,
+    lostTimout,
+    json
   }
 }
 
@@ -58,6 +64,8 @@ export function closeStream(name){
     let state = getState();
     if(state.stream && state.stream[name] && state.stream[name].ws){
       state.stream[name].ws.close();
+      clearTimeout(state.stream[name].timeout);
+      dispatch(removeStream(name));
     }
   };
 }
@@ -113,7 +121,7 @@ function _addChildren(message, state){
   }
 }
 
-function _startStream(stream, session, getState, dispatch){
+function _startStream(stream, session, getState, dispatch, reconnecting){
   let url;
   if(stream.meta.id){
     url = config.baseUrl + '/stream/' + stream.meta.id + '?x-session=' + session;
@@ -122,7 +130,7 @@ function _startStream(stream, session, getState, dispatch){
   }
   let ws = new WebSocket(url);
 
-  dispatch(updateStream(stream.name, status.CONNECTING, steps.CONNECTING.OPENING_SOCKET, ws));
+  dispatch(updateStream(stream.name, reconnecting ? status.RECONNECTING : status.CONNECTING, steps.CONNECTING.OPENING_SOCKET, ws));
 
   ws.onopen = () => {
     dispatch(updateStream(stream.name, status.OPEN, null, ws));
@@ -172,8 +180,21 @@ function _startStream(stream, session, getState, dispatch){
   };
 
   ws.onclose = (e) => {
-    dispatch(updateStream(stream.name, status.CLOSED, e.code));
     console.log('Stream close: ' + url);
+    if(e.code !== 4001){
+      let lostTimeout;
+      let retryTimeout = setTimeout(() => {
+        _startStream(stream, session, getState, dispatch, true);
+      }, retryTimer);
+      if(!reconnecting){
+        lostTimeout = setTimeout(() => {
+          dispatch(updateStream(stream.name, status.LOST, null, null, null, null, stream));
+        }, lostTimer);
+      }
+      dispatch(updateStream(stream.name, status.RECONNECTING, steps.CONNECTING.WAITING, ws, retryTimeout, lostTimeout));
+    } else {
+      dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, null, null, stream));
+    }
   };
 }
 
