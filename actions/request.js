@@ -101,6 +101,12 @@ function dispatchMethodAction(dispatch, method, url, json, options){
 
 export function makeRequest(method, url, data, options = {}) {
   return async (dispatch, getState) => {
+    if(method.constructor === Object){
+      data = method.data || method.body;
+      url = method.url;
+      options = method;
+      method = method.method;
+    }
     if(!_request){
       console.log('request function is not set');
       return;
