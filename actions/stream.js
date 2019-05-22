@@ -1,6 +1,6 @@
 import querystring from 'querystring';
 
-import { _request } from '../index';
+import { _request } from './request';
 
 import config from '../config';
 import { getUrlInfo } from '../util/helpers';

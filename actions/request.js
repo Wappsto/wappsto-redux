@@ -1,7 +1,4 @@
 import querystring from 'querystring';
-
-import { _request } from '../index';
-
 import config from '../config';
 import { isUUID, getUrlInfo } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
@@ -99,6 +96,24 @@ function dispatchMethodAction(dispatch, method, url, json, options){
   }
 }
 
+export let _request = async (options, successCallback, errorCallback) => {
+  try{
+    let response = await fetch(options.url, options);
+    try{
+      let json = await response.json();
+      return {
+        ok: response.ok,
+        status: response.status,
+        json
+      };
+    }catch(e){
+      return { ok: response.ok, status: response.status };
+    }
+  } catch(e){
+    return { ok: false, status: e.status };
+  }
+};
+
 export function makeRequest(method, url, data, options = {}) {
   return async (dispatch, getState) => {
     if(method.constructor === Object){
@@ -147,4 +162,8 @@ export function removeRequestError(url, method){
     url,
     method
   }
+}
+
+export function overrideRequest(func){
+  _request = func;
 }
