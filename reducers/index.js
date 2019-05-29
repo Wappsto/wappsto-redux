@@ -18,7 +18,7 @@ const appReducer = combineReducers({
   stream
 });
 
-export default rootReducer = (state, action) => {
+export default function rootReducer(state, action){
   if (action.type === REMOVE_SESSION) {
     state = undefined;
   }

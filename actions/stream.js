@@ -140,6 +140,9 @@ function _startStream(stream, session, getState, dispatch, reconnecting){
   } else {
     url = config.baseUrl + '/stream/?x-session=' + session + '&' + querystring.stringify(stream);
   }
+  if(window && window.location && window.location.origin && !url.startsWith('http')){
+    url = window.location.origin.replace('http', 'ws') + url;
+  }
   let ws = new WebSocket(url);
 
   dispatch(updateStream(stream.name, reconnecting ? status.RECONNECTING : status.CONNECTING, steps.CONNECTING.OPENING_SOCKET, ws));
