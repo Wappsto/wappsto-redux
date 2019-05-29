@@ -1,4 +1,4 @@
-{
+let schemaTree = {
   "user": {
     "name": "users",
     "dependencies": []
@@ -29,3 +29,5 @@
     }]
   }
 }
+
+export default schemaTree;

@@ -5,7 +5,7 @@ import { _request } from './request';
 import config from '../config';
 import { getUrlInfo } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
-import schemaTree from '../util/schemaTree.json';
+import schemaTree from '../util/schemaTree';
 
 export const UPDATE_STREAM = 'UPDATE_STREAM';
 export const REMOVE_STREAM = 'REMOVE_STREAM';

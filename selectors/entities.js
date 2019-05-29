@@ -1,4 +1,4 @@
-import schemaTree from "../util/schemaTree.json";
+import schemaTree from "../util/schemaTree";
 
 function getTreeName(key){
   return (schemaTree[key] && schemaTree[key].name) || key;

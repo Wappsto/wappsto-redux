@@ -2,10 +2,11 @@ import {
   ADD_ITEM,
   REMOVE_ITEM
 } from "../actions/items";
+import reducerRegistry from "../util/reducerRegistry";
 
 const initialState = {};
 
-export default (state = initialState, action) => {
+export default function reducer(state = initialState, action){
   switch(action.type){
     case ADD_ITEM:
       return Object.assign({}, state, {
@@ -18,3 +19,5 @@ export default (state = initialState, action) => {
   }
   return state;
 }
+
+reducerRegistry.register("items", reducer);

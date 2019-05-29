@@ -5,6 +5,7 @@ import {
   REMOVE_REQUEST,
   REMOVE_REQUEST_ERROR
 } from "../actions/request";
+import reducerRegistry from "../util/reducerRegistry";
 
 const initialState = { errors: {}};
 
@@ -21,7 +22,7 @@ function getActionState(action, state, status){
   });
 }
 
-export default (state = initialState, action) => {
+export default function reducer(state = initialState, action){
   switch(action.type){
     case REQUEST_PENDING:
       state = getActionState(action, state, "pending");
@@ -49,3 +50,5 @@ export default (state = initialState, action) => {
   }
   return state;
 }
+
+reducerRegistry.register("request", reducer);

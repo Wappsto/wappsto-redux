@@ -1,8 +1,9 @@
 import { UPDATE_STREAM, REMOVE_STREAM, status } from "../actions/stream";
+import reducerRegistry from "../util/reducerRegistry";
 
 const initialState = {};
 
-export default (state = initialState, action) => {
+export default function reducer(state = initialState, action){
   switch(action.type){
     case UPDATE_STREAM:
       switch(action.status){
@@ -44,3 +45,5 @@ export default (state = initialState, action) => {
   }
   return state;
 }
+
+reducerRegistry.register("stream", reducer);

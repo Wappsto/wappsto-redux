@@ -3,10 +3,11 @@ import {
   REMOVE_SESSION,
   INVALID_SESSION
 } from "../actions/session";
+import reducerRegistry from "../util/reducerRegistry";
 
 const initialState = {};
 
-export default (state = initialState, action) => {
+export default function reducer(state = initialState, action){
   switch(action.type){
     case ADD_SESSION:
       return Object.assign({}, state, action.data, { valid: true });
@@ -19,3 +20,5 @@ export default (state = initialState, action) => {
   }
   return state;
 }
+
+reducerRegistry.register("session", reducer);

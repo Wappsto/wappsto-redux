@@ -96,7 +96,7 @@ function dispatchMethodAction(dispatch, method, url, json, options){
   }
 }
 
-export let _request = async (options, successCallback, errorCallback) => {
+export let _request = async (options) => {
   try{
     let response = await fetch(options.url, options);
     try{

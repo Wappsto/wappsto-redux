@@ -5,8 +5,9 @@ import {
   REMOVE_ENTITIES
 } from "../actions/entities";
 import schemas from "../util/schemas";
-import schemaTree from "../util/schemaTree.json";
+import schemaTree from "../util/schemaTree";
 import { parse } from "../util/parser";
+import reducerRegistry from "../util/reducerRegistry";
 
 const initialState = {};
 
@@ -21,6 +22,9 @@ function mergeUnique(arr1, arr2){
 }
 
 function addEntities(state, type, data){
+  if(!schemas.hasOwnProperty(type)){
+    schemas.generateGenericSchema(type);
+  }
   data = normalize(data, [schemas[type]]);
   for(let key in data.entities){
     state[key] = Object.assign({}, state[key], data.entities[key]);
@@ -93,6 +97,9 @@ function removeChildEntities(state, type, id, child, ids){
 }
 
 function addEntity(state, type, data){
+  if(!schemas.hasOwnProperty(type)){
+    schemas.generateGenericSchema(type);
+  }
   data = normalize(data, schemas[type]);
   for(let key in data.entities){
     state[key] = Object.assign({}, state[key], data.entities[key]);
@@ -113,7 +120,7 @@ function removeEntity(state, type, id){
   return { state };
 }
 
-export default (state = initialState, action) => {
+export default function reducer(state = initialState, action){
   let newData;
   switch(action.type){
     case ADD_ENTITIES:
@@ -155,3 +162,5 @@ export default (state = initialState, action) => {
   }
   return state;
 }
+
+reducerRegistry.register("entities", reducer);
