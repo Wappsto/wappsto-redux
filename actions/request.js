@@ -135,7 +135,12 @@ export function makeRequest(method, url, data, options = {}) {
     dispatch(requestPending(method, url, data, options));
     let requestOptions = getOptions(method, url, data, options, state.session);
     // console.log(requestOptions);
-    let response = await _request(requestOptions);
+    let response;
+    try{
+      response = await _request(requestOptions);
+    } catch(e){
+      response = e;
+    }
     if(response.ok){
       dispatchMethodAction(dispatch, method, url, response.json, options);
       dispatch(requestSuccess(method, url, response.status, response.json, options));
