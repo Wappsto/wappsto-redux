@@ -9,7 +9,7 @@ export function isUUID(data){
 
 export function getUrlInfo(url, skip = 0){
   let service, parent, id;
-  let split = url.split("/");
+  let split = url.split("?")[0].split("/");
   if(isUUID(split[split.length - 1 - skip])){
     id = split[split.length - 1 - skip];
     service = split[split.length - 2 - skip];
