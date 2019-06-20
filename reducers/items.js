@@ -10,7 +10,7 @@ export default function reducer(state = initialState, action){
   switch(action.type){
     case ADD_ITEM:
       let data;
-      if(action.data.constructor === Function){
+      if(action.data && action.data.constructor === Function){
         data = action.data(state[action.name]);
       } else {
         data = action.data;
