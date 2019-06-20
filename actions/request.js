@@ -10,7 +10,39 @@ export const REQUEST_SUCCESS = 'REQUEST_SUCCESS';
 export const REMOVE_REQUEST = 'REMOVE_REQUEST';
 export const REMOVE_REQUEST_ERROR = 'REMOVE_REQUEST_ERROR';
 
-function getUrl(url, query = {}){
+function getQueryObj(query) {
+	var urlParams = {};
+  var match,
+      pl     = /\+/g,
+      search = /([^&=]+)=?([^&]*)/g,
+      decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
+
+  while ((match = search.exec(query)))
+     urlParams[decode(match[1])] = decode(match[2]);
+	return urlParams;
+}
+
+function splitUrlAndOptions(url, options){
+  let newOptions = { ...options };
+  let split = url.split("?");
+  if(split[1]){
+    let query = split.slice(1).join("?");
+    if(!newOptions.query){
+      newOptions.query = getQueryObj(query);
+    } else {
+      newOptions.query = {
+        ...newOptions.query,
+        ...getQueryObj(query)
+      }
+    }
+  }
+  return {
+    url: split[0],
+    options: newOptions
+  }
+}
+
+function getUrlWithQuery(url, query = {}){
   let result = config.baseUrl + url;
   if(Object.keys(query).length > 0){
     result += result.indexOf('?') === -1 ? '?': '&';
@@ -27,7 +59,7 @@ function getOptions(method, url, data, options, sessionJSON){
   if(['PUT' , 'PATCH', 'POST'].indexOf(method) !== -1){
     requestOptions.body = JSON.stringify(data);
   }
-  requestOptions.url = getUrl(url, options.query);
+  requestOptions.url = getUrlWithQuery(url, options.query);
   return requestOptions;
 }
 
@@ -127,6 +159,9 @@ export function makeRequest(method, url, data, options = {}) {
       return;
     }
     method = method.toUpperCase();
+    let result = splitUrlAndOptions(url, options);
+    url = result.url;
+    options = result.options;
     let state = getState();
     if(state.request[url] && state.request[url].status === 'pending'){
       console.log('a request with the same url is already pending');
