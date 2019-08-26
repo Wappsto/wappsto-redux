@@ -64,9 +64,9 @@ function addChildEntities(state, type, id, child, data, reset = true){
       } else {
         newData = addEntity(state, child, data);
         result = newData.result;
+        element[child] = result;
       }
       state = newData.state;
-      element[child] = result;
     }
   }
   return { state, result };
