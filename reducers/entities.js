@@ -41,6 +41,9 @@ function removeEntities(state, type, ids){
 }
 
 function removeAllEntities(state, type){
+  if(!schemas.hasOwnProperty(type)){
+    schemas.generateGenericSchema(type);
+  }
   let def = schemaTree[type];
   let entities = state[def.name];
   if(entities){
