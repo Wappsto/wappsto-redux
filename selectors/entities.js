@@ -75,8 +75,17 @@ export const getEntities = (state, type, options = {}) => {
         parent[type].forEach((id) => {
           let found = state.entities[name][id];
           if(found){
-            if(options.filter && matchObject(found, filter)){
-              result.push(found);
+            if(options.filter){
+              let filters = options.filter;
+              if(!(filters instanceof Array)){
+                filters = [filters];
+              }
+              for(let i = 0; i < filters.length; i++){
+                if(matchObject(found, filters[i])){
+                  result.push(found);
+                  break;
+                }
+              }
             } else {
               result.push(found);
             }
@@ -85,13 +94,20 @@ export const getEntities = (state, type, options = {}) => {
       }
     } else {
       if(options.filter){
+        let filters = options.filter;
         result = [];
-        for(let key in state.entities[name]){
-          let val = state.entities[name][key];
-          if(matchObject(val, options.filter)){
-            result.push(val);
-          }
+        if(!(filters instanceof Array)){
+          filters = [filters];
         }
+        filters.forEach(filter => {
+          for(let key in state.entities[name]){
+            const val = state.entities[name][key];
+            if(matchObject(val, filter)){
+              result.push(val);
+              break;
+            }
+          }
+        });
       } else {
         result = Object.values(state.entities[name]);
       }

@@ -26,4 +26,18 @@ schemas.generateGenericSchema = (name) => {
   schemas[name] = new schema.Entity(schemaName, {}, options);
 }
 
+schemas.getSchema = (type) => {
+  if(!schemas.hasOwnProperty(type)){
+    schemas.generateGenericSchema(type);
+  }
+  return schemas[type];
+}
+
+schemas.getSchemaTree = (type) => {
+  if(!schemas.hasOwnProperty(type)){
+    schemas.generateGenericSchema(type);
+  }
+  return schemaTree[type];
+}
+
 export default schemas;

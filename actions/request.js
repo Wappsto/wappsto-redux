@@ -1,6 +1,6 @@
 import querystring from 'querystring';
 import config from '../config';
-import { isUUID, getUrlInfo } from '../util/helpers';
+import { getUrlInfo } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
 import { addSession, invalidSession, removeSession } from './session';
 
@@ -45,7 +45,7 @@ function splitUrlAndOptions(url, options){
 function getUrlWithQuery(url, query = {}){
   let result = config.baseUrl + url;
   if(Object.keys(query).length > 0){
-    result += result.indexOf('?') === -1 ? '?': '&';
+		result += result.indexOf('?') === -1 ? '?': '&';
     result += querystring.stringify(query);
   }
   return result;
@@ -96,7 +96,7 @@ function requestError(method, url, responseStatus, json, options){
 }
 
 function dispatchEntitiesAction(dispatch, method, url, json, options){
-  let { service, id, parent } = getUrlInfo(url);
+  let { service, parent } = getUrlInfo(url);
   switch(method){
     case 'GET':
       dispatch(addEntities(service, json, { reset: false, ...options, parent }));
@@ -109,6 +109,8 @@ function dispatchEntitiesAction(dispatch, method, url, json, options){
     case 'DELETE':
       dispatch(removeEntities(service, json.deleted, { ...options, parent, reset: false }));
       break;
+		default:
+			break;
   }
 }
 
@@ -163,13 +165,13 @@ export function makeRequest(method, url, data, options = {}) {
     url = result.url;
     options = result.options;
     let state = getState();
-    if(state.request[url] && state.request[url].status === 'pending'){
+		let requestOptions = getOptions(method, url, data, options, state.session);
+		let urlKey = method === 'GET' ? requestOptions.url.replace(config.baseUrl, '') : url;
+    if(state.request[urlKey] && state.request[urlKey].status === 'pending'){
       console.log('a request with the same url is already pending');
       return;
     }
-    dispatch(requestPending(method, url, data, options));
-    let requestOptions = getOptions(method, url, data, options, state.session);
-    // console.log(requestOptions);
+    dispatch(requestPending(method, urlKey, data, options));
     let response;
     try{
       response = await _request(requestOptions);
@@ -177,29 +179,31 @@ export function makeRequest(method, url, data, options = {}) {
       response = e;
     }
     if(response.ok){
-      dispatchMethodAction(dispatch, method, url, response.json, options);
-      dispatch(requestSuccess(method, url, response.status, response.json, options));
+      dispatchMethodAction(dispatch, method, urlKey, response.json, options);
+      dispatch(requestSuccess(method, urlKey, response.status, response.json, options));
     } else {
       if(response.json && response.json.code === 9900025){
         dispatch(invalidSession());
       }
-      dispatch(requestError(method, url, response.status, response.json, options));
+      dispatch(requestError(method, urlKey, response.status, response.json, options));
     }
   };
 }
 
-export function removeRequest(url, method){
+export function removeRequest(url, method, query){
+	const urlKey = getUrlWithQuery(url, query);
   return {
     type: REMOVE_REQUEST,
-    url,
+    url: urlKey,
     method
   }
 }
 
-export function removeRequestError(url, method){
+export function removeRequestError(url, method, query){
+	const urlKey = getUrlWithQuery(url, query);
   return {
     type: REMOVE_REQUEST_ERROR,
-    url,
+    url: urlKey,
     method
   }
 }

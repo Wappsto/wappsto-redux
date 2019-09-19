@@ -1,12 +1,26 @@
-export const getRequestError = (state, url, method) => {
-  return state.request.errors[method + "_" + url];
+import querystring from 'querystring';
+
+function getUrlKey(url, method, query){
+  if(method === 'GET'){
+    const qs = querystring.stringify(query);
+    if(qs){
+      url += '?' + qs;
+    }
+  }
+  return url;
 }
 
-export const getRequestAndError = (state, url, method) => {
+const getRequestError = (state, url, method, query) => {
+  const urlKey = getUrlKey(url, method, query);
+  return state.request.errors[method + "_" + urlKey];
+}
+
+const getRequestAndError = (state, url, method, query) => {
   let request;
-  let error = state.request.errors[method + "_" + url];
-  if(state.request[url] && state.request[url].method === method){
-    request = state.request[url];
+  const error = getRequestError(state, url, method, query);
+  const urlKey = getUrlKey(url, method, query);
+  if(state.request[urlKey] && state.request[urlKey].method === method){
+    request = state.request[urlKey];
   }
   return {
     request,
@@ -14,9 +28,10 @@ export const getRequestAndError = (state, url, method) => {
   };
 }
 
-export const getRequest = (state, url, method) => {
+export const getRequest = (state, url, method, query) => {
+  method = method.toUpperCase();
   if(method){
-    let result = getRequestAndError(state, url, method);
+    let result = getRequestAndError(state, url, method, query);
     return result.error || result.request;
   } else {
     return state.request[url];

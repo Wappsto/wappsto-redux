@@ -5,7 +5,6 @@ import {
   REMOVE_ENTITIES
 } from "../actions/entities";
 import schemas from "../util/schemas";
-import schemaTree from "../util/schemaTree";
 import { parse } from "../util/parser";
 import reducerRegistry from "../util/reducerRegistry";
 
@@ -22,10 +21,7 @@ function mergeUnique(arr1, arr2){
 }
 
 function addEntities(state, type, data){
-  if(!schemas.hasOwnProperty(type)){
-    schemas.generateGenericSchema(type);
-  }
-  data = normalize(data, [schemas[type]]);
+  data = normalize(data, [schemas.getSchema(type)]);
   for(let key in data.entities){
     state[key] = Object.assign({}, state[key], data.entities[key]);
   }
@@ -41,10 +37,7 @@ function removeEntities(state, type, ids){
 }
 
 function removeAllEntities(state, type){
-  if(!schemas.hasOwnProperty(type)){
-    schemas.generateGenericSchema(type);
-  }
-  let def = schemaTree[type];
+  let def = schemas.getSchemaTree(type);
   let entities = state[def.name];
   if(entities){
     let newData = removeEntities(state, type, Object.keys(entities));
@@ -55,7 +48,7 @@ function removeAllEntities(state, type){
 
 function addChildEntities(state, type, id, child, data, reset = true){
   let newData, result;
-  let def = schemaTree[type];
+  let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
   if(element){
     let childDef = def.dependencies.find(d => d.key === child);
@@ -77,7 +70,7 @@ function addChildEntities(state, type, id, child, data, reset = true){
 
 function removeChildEntities(state, type, id, child, ids){
   let result, newData;
-  let def = schemaTree[type];
+  let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
   if(element){
     let childDef = def.dependencies.find(d => d.key === child);
@@ -100,10 +93,7 @@ function removeChildEntities(state, type, id, child, ids){
 }
 
 function addEntity(state, type, data){
-  if(!schemas.hasOwnProperty(type)){
-    schemas.generateGenericSchema(type);
-  }
-  data = normalize(data, schemas[type]);
+  data = normalize(data, schemas.getSchema(type));
   for(let key in data.entities){
     state[key] = Object.assign({}, state[key], data.entities[key]);
   }
@@ -111,7 +101,7 @@ function addEntity(state, type, data){
 }
 
 function removeEntity(state, type, id){
-  let def = schemaTree[type];
+  let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
   if(element){
     def.dependencies.forEach(dep => {
@@ -155,15 +145,16 @@ export default function reducer(state = initialState, action){
         state = newData.state;
       } else {
         if(!action.ids){
-          let def = schemaTree[action.service];
+          let def = schemas.getSchemaTree(action.service);
           action.ids = Object.keys(state[def.name] || {});
         }
         newData = removeEntities(state, action.service, action.ids);
         state = newData.state;
       }
       return state;
+    default:
+      return state;
   }
-  return state;
 }
 
 reducerRegistry.register("entities", reducer);
