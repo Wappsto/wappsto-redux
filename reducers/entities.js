@@ -109,6 +109,7 @@ function removeEntity(state, type, id){
       state = newData.state;
     });
     delete state[def.name][id];
+    state[def.name] = Object.assign({}, state[def.name]);
   }
   return { state };
 }
