@@ -47,8 +47,9 @@ export default function reducer(state = initialState, action){
       state = Object.assign({}, state);
       delete state.errors[action.method + "_" + action.url]
       return state;
+    default:
+      return state;
   }
-  return state;
 }
 
 reducerRegistry.register("request", reducer);

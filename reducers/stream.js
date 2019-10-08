@@ -42,8 +42,9 @@ export default function reducer(state = initialState, action){
       state = Object.assign({}, state);
       delete state[action.name];
       return state;
+    default:
+      return state;
   }
-  return state;
 }
 
 reducerRegistry.register("stream", reducer);

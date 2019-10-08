@@ -23,9 +23,8 @@ export default function reducer(state = initialState, action){
       delete state[action.name];
       return state;
     default:
-      break;
+      return state;
   }
-  return state;
 }
 
 reducerRegistry.register("items", reducer);

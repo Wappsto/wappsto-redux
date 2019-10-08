@@ -64,8 +64,8 @@ export function closeStream(name){
   return (dispatch, getState) => {
     let state = getState();
     if(state.stream && state.stream[name]){
-      if(timeouts[stream.name]){
-        _clearStreamTimeouts(stream);
+      if(timeouts[name]){
+        _clearStreamTimeouts(state.stream[name]);
       }
       if(state.stream[name].ws){
         state.stream[name].ws.close();
@@ -74,6 +74,13 @@ export function closeStream(name){
       }
     }
   };
+}
+
+function removeStream(name){
+  return {
+    action: REMOVE_STREAM,
+    name
+  }
 }
 
 function _mergeStreams(oldJSON, newJSON){
@@ -185,6 +192,8 @@ function _startStream(stream, session, getState, dispatch, reconnecting){
           case 'delete':
             let { parent } = getUrlInfo(message.path, 1);
             dispatch(removeEntities(message.meta_object.type, [message.meta_object.id]), { parent });
+            break;
+          default:
             break;
         }
       })

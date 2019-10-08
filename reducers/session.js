@@ -17,8 +17,9 @@ export default function reducer(state = initialState, action){
       return Object.assign({}, state, {
         valid: false
       });
+    default:
+      return state;
   }
-  return state;
 }
 
 reducerRegistry.register("session", reducer);

@@ -115,7 +115,7 @@ export const getEntities = (state, type, options = {}) => {
   } else {
     result = [];
   }
-  return result;
+  return result.slice(0, options.limit);
 }
 
 export const getUserData = (state) => {
