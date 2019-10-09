@@ -1,4 +1,5 @@
 import schemaTree from "../util/schemaTree";
+import { createSelector } from "reselect";
 
 function getTreeName(key){
   return (schemaTree[key] && schemaTree[key].name) || key;
@@ -25,127 +26,153 @@ function matchObject(obj1, obj2) {
   return true;
 }
 
-export const getEntity = (state, type, options) => {
-  let name = getTreeName(type);
-  if(options){
-    if(options.constructor === String){
-      // options is an id
-      return (state.entities[name] &&  state.entities[name][options]) || {};
-    } else if(options.constructor === Object){
-      if(options.parent){
-        let parent = getEntity(state, options.parent.type, options.parent.id);
-        if(parent && parent.hasOwnProperty(type)){
-          if(parent[type].constructor === Array){
-            for(let i = 0; i < parent[type].length; i++){
-              let id = parent[type][i];
-              let found = state.entities[name][id];
-              if(found && matchObject(found, options.filter || {})){
-                return found;
+const defaultArr = [];
+const stateSelector = state => state.entities;
+
+const makeStateTypeSelector = () => createSelector(
+  stateSelector,
+  (_, type) => type,
+  (entites, type) => entites[getTreeName(type)]
+);
+
+const makeParentStateTypeSelector = () => createSelector(
+  stateSelector,
+  (_, _1, options) => options && options.parent && options.parent.type,
+  (entites, type) => entites[getTreeName(type)]
+);
+
+const makeParentSelector = () => {
+  const parentStateTypeSelector = makeParentStateTypeSelector();
+  return createSelector(
+    parentStateTypeSelector,
+    (_, _1, options) => options && options.parent && options.parent.id,
+    (entities, id) => {
+      if(id){
+        return entities[id];
+      }
+      return null;
+    }
+  );
+}
+
+export const makeEntitySelector = () => {
+  const stateTypeSelector = makeStateTypeSelector();
+  const parentSelector = makeParentSelector();
+  return createSelector(
+    stateTypeSelector,
+    parentSelector,
+    (_, type) => type,
+    (_, _1, options) => options,
+    (entities, parent, type, options={}) => {
+      if(entities && options){
+        if(options.constructor === String){
+          // options is an id
+          return entities[options];
+        } else if(options.constructor === Object){
+          if(parent){
+            if(parent.hasOwnProperty(type)){
+              if(parent[type].constructor === Array){
+                for(let i = 0; i < parent[type].length; i++){
+                  let id = parent[type][i];
+                  let found = entities[id];
+                  if(found && matchObject(found, options.filter || {})){
+                    return found;
+                  }
+                }
+              } else {
+                if(options.filter && matchObject(parent[type], options.filter || {})){
+                  return parent[type];
+                } else {
+                  return undefined;
+                }
               }
             }
           } else {
-            if(options.filter && matchObject(parent[type], options.filter)){
-              return parent[type];
-            } else {
-              return parent[type];
+            for(let key in entities){
+              let val = entities[key];
+              if(matchObject(val, options.filter || {})){
+                return val;
+              }
             }
           }
         }
-      } else {
-        for(let key in state.entities[name]){
-          let val = state.entities[name][key];
-          if(matchObject(val, options.filter)){
-            return val;
-          }
-        }
       }
+      return undefined;
     }
-  }
-  return undefined;
+  );
 }
 
-export const getEntities = (state, type, options = {}) => {
-  let result;
-  let name = getTreeName(type);
-  if(state.entities[name]){
-    if(options.parent){
-      result = [];
-      let parent = getEntity(state, options.parent.type, options.parent.id);
-      if(parent && parent[type]){
-        parent[type].forEach((id) => {
-          let found = state.entities[name][id];
-          if(found){
-            if(options.filter){
-              let filters = options.filter;
-              if(!(filters instanceof Array)){
-                filters = [filters];
-              }
-              for(let i = 0; i < filters.length; i++){
-                if(matchObject(found, filters[i])){
+export const makeEntitiesSelector = () => {
+  const stateTypeSelector = makeStateTypeSelector();
+  const parentSelector = makeParentSelector();
+  return createSelector(
+    stateTypeSelector,
+    parentSelector,
+    (_, type) => type,
+    (_, _1, options) => options,
+    (entities, parent, type, options={}) => {
+      let result;
+      if(entities){
+        if(parent){
+          result = [];
+          if(parent.hasOwnProperty(type)){
+            parent[type].forEach((id) => {
+              let found = entities[id];
+              if(found){
+                if(options.filter){
+                  let filters = options.filter;
+                  if(!(filters instanceof Array)){
+                    filters = [filters];
+                  }
+                  for(let i = 0; i < filters.length; i++){
+                    if(matchObject(found, filters[i])){
+                      result.push(found);
+                      break;
+                    }
+                  }
+                } else {
                   result.push(found);
+                }
+              }
+            });
+          }
+        } else {
+          if(options.filter){
+            let filters = options.filter;
+            result = [];
+            if(!(filters instanceof Array)){
+              filters = [filters];
+            }
+            filters.forEach(filter => {
+              for(let key in entities){
+                const val = entities[key];
+                if(matchObject(val, filter)){
+                  result.push(val);
                   break;
                 }
               }
-            } else {
-              result.push(found);
-            }
+            });
+          } else {
+            result = Object.values(entities);
           }
-        });
-      }
-    } else {
-      if(options.filter){
-        let filters = options.filter;
-        result = [];
-        if(!(filters instanceof Array)){
-          filters = [filters];
         }
-        filters.forEach(filter => {
-          for(let key in state.entities[name]){
-            const val = state.entities[name][key];
-            if(matchObject(val, filter)){
-              result.push(val);
-              break;
-            }
-          }
-        });
       } else {
-        result = Object.values(state.entities[name]);
+        result = defaultArr;
       }
+      return result.slice(0, options.limit);
     }
-  } else {
-    result = [];
-  }
-  return result.slice(0, options.limit);
+  );
 }
 
-export const getUserData = (state) => {
-  return state.entities.users && state.entities.users[Object.keys(state.entities[schemaTree.user.name])[0]];
-}
-
-export const find = (state, obj, type, filter) => {
-  let name = getTreeName(type);
-  if(obj.hasOwnProperty(type) && obj[type].constructor === Array){
-    for(let i = 0; i < obj[type].length; i++){
-      let id = obj[type][i];
-      let entity = (state.entities[name] &&  state.entities[name][id]);
-      if(entity && matchObject(entity, filter)){
-        return entity;
+export const getUserData = () => {
+  const stateTypeSelector = makeStateTypeSelector();
+  return createSelector(
+    (state) => stateTypeSelector(state, 'user'),
+    (entities) => {
+      if(entities){
+        return Object.values(entities)[0];
       }
+      return undefined;
     }
-  }
-  return undefined;
-}
-
-export const filter = (state, obj, type, filter) => {
-  let result = [];
-  let name = getTreeName(type);
-  if(obj.hasOwnProperty(type) && obj[type].constructor === Array){
-    obj[type].forEach((id) => {
-      let entity = (state.entities[name] &&  state.entities[name][id]);
-      if(entity && matchObject(entity, filter)){
-        result.push(entity);
-      }
-    });
-  }
-  return result;
+  );
 }
