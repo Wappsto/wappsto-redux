@@ -33,6 +33,8 @@ function removeEntities(state, type, ids){
     let newData = removeEntity(state, type, id);
     state = newData.state;
   });
+  const def = schemas.getSchemaTree(type);
+  state[def.name] = Object.assign({}, state[def.name]);
   return { state, result: [] };
 }
 
@@ -109,7 +111,6 @@ function removeEntity(state, type, id){
       state = newData.state;
     });
     delete state[def.name][id];
-    state[def.name] = Object.assign({}, state[def.name]);
   }
   return { state };
 }
