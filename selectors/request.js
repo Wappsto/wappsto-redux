@@ -1,3 +1,4 @@
+import { createSelector } from "reselect";
 import querystring from 'querystring';
 
 function getUrlKey(url, method, query){
@@ -10,17 +11,18 @@ function getUrlKey(url, method, query){
   return url;
 }
 
-const getRequestError = (state, url, method, query) => {
-  const urlKey = getUrlKey(url, method, query);
-  return state.request.errors[method + "_" + urlKey];
+const stateSelector = state => state.request;
+
+const getRequestError = (requests, method, urlKey) => {
+  return requests.errors[method + "_" + urlKey];
 }
 
-const getRequestAndError = (state, url, method, query) => {
+const getRequestAndError = (requests, url, method, query) => {
   let request;
-  const error = getRequestError(state, url, method, query);
   const urlKey = getUrlKey(url, method, query);
-  if(state.request[urlKey] && state.request[urlKey].method === method){
-    request = state.request[urlKey];
+  const error = getRequestError(requests, method, urlKey);
+  if(requests[urlKey] && requests[urlKey].method === method){
+    request = requests[urlKey];
   }
   return {
     request,
@@ -28,12 +30,20 @@ const getRequestAndError = (state, url, method, query) => {
   };
 }
 
-export const getRequest = (state, url, method, query) => {
+const getRequest = (requests, url, method, query) => {
   method = method.toUpperCase();
   if(method){
-    let result = getRequestAndError(state, url, method, query);
+    let result = getRequestAndError(requests, url, method, query);
     return result.error || result.request;
   } else {
-    return state.request[url];
+    return requests[url];
   }
 }
+
+export const makeRequestSelector = () => createSelector(
+  stateSelector,
+  (_, url) => url,
+  (_, _1, method) => method,
+  (_, _1, _2, query) => query,
+  getRequest
+)

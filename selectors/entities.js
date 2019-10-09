@@ -1,5 +1,5 @@
-import schemaTree from "../util/schemaTree";
 import { createSelector } from "reselect";
+import schemaTree from "../util/schemaTree";
 
 function getTreeName(key){
   return (schemaTree[key] && schemaTree[key].name) || key;
@@ -32,13 +32,13 @@ const stateSelector = state => state.entities;
 const makeStateTypeSelector = () => createSelector(
   stateSelector,
   (_, type) => type,
-  (entites, type) => entites[getTreeName(type)]
+  (entities, type) => entities[getTreeName(type)]
 );
 
 const makeParentStateTypeSelector = () => createSelector(
   stateSelector,
   (_, _1, options) => options && options.parent && options.parent.type,
-  (entites, type) => entites[getTreeName(type)]
+  (entities, type) => entities[getTreeName(type)]
 );
 
 const makeParentSelector = () => {

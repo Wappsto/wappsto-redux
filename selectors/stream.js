@@ -1,3 +1,9 @@
-export const getStream = (state, name) => {
-  return state.stream[name];
-}
+import { createSelector } from "reselect";
+
+const stateSelector = state => state.stream;
+
+export const makeStreamSelector = () => createSelector(
+  stateSelector,
+  (_, name) => name,
+  (streams, name) => streams[name]
+)
