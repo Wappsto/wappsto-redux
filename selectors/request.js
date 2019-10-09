@@ -47,3 +47,27 @@ export const makeRequestSelector = () => createSelector(
   (_, _1, _2, query) => query,
   getRequest
 )
+
+const getRequestById = (obj, id) => {
+  for(let key in obj){
+    if(key !== 'errors' && obj[key] && obj[key].id === id){
+      return obj[key];
+    }
+  }
+  return undefined;
+}
+
+export const makeRequestIdSelector = () => createSelector(
+  stateSelector,
+  (_, id) => id,
+  (requests, id) => {
+    let request;
+    if(id){
+      request = getRequestById(requests, id);
+      if(!request){
+        request = getRequestById(requests.errors, id);
+      }
+    }
+    return request;
+  }
+)

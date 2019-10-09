@@ -63,9 +63,10 @@ function getOptions(method, url, data, options, sessionJSON){
   return requestOptions;
 }
 
-function requestPending(method, url, body, options) {
+function requestPending(id, method, url, body, options) {
   return {
     type: REQUEST_PENDING,
+		id,
     method,
     url,
     body,
@@ -73,9 +74,10 @@ function requestPending(method, url, body, options) {
   }
 }
 
-function requestSuccess(method, url, responseStatus, json, options){
+function requestSuccess(id, method, url, responseStatus, json, options){
   return {
     type: REQUEST_SUCCESS,
+		id,
     method,
     url,
     responseStatus,
@@ -84,9 +86,10 @@ function requestSuccess(method, url, responseStatus, json, options){
   }
 }
 
-function requestError(method, url, responseStatus, json, options){
+function requestError(id, method, url, responseStatus, json, options){
   return {
     type: REQUEST_ERROR,
+		id,
     method,
     url,
     responseStatus,
@@ -148,8 +151,28 @@ export let _request = async (options) => {
   }
 };
 
+async function startRequest(dispatch, id, urlKey, data, options, requestOptions){
+	dispatch(requestPending(id, requestOptions.method, urlKey, data, options));
+	let response;
+	try{
+		response = await _request(requestOptions);
+	} catch(e){
+		response = e;
+	}
+	if(response.ok){
+		dispatchMethodAction(dispatch, requestOptions.method, urlKey, response.json, options);
+		dispatch(requestSuccess(id, requestOptions.method, urlKey, response.status, response.json, options));
+	} else {
+		if(response.json && response.json.code === 9900025){
+			dispatch(invalidSession());
+		}
+		dispatch(requestError(id, requestOptions.method, urlKey, response.status, response.json, options));
+	}
+}
+
+let nextId = 1;
 export function makeRequest(method, url, data, options = {}) {
-  return async (dispatch, getState) => {
+  return (dispatch, getState) => {
     if(method.constructor === Object){
       data = method.data || method.body;
       url = method.url;
@@ -168,25 +191,13 @@ export function makeRequest(method, url, data, options = {}) {
 		let requestOptions = getOptions(method, url, data, options, state.session);
 		let urlKey = method === 'GET' ? requestOptions.url.replace(config.baseUrl, '') : url;
     if(state.request[urlKey] && state.request[urlKey].status === 'pending'){
-      console.log('a request with the same url is already pending');
-      return;
+      // console.log('a request with the same url is already pending');
+      return state.request[urlKey].id;
     }
-    dispatch(requestPending(method, urlKey, data, options));
-    let response;
-    try{
-      response = await _request(requestOptions);
-    } catch(e){
-      response = e;
-    }
-    if(response.ok){
-      dispatchMethodAction(dispatch, method, urlKey, response.json, options);
-      dispatch(requestSuccess(method, urlKey, response.status, response.json, options));
-    } else {
-      if(response.json && response.json.code === 9900025){
-        dispatch(invalidSession());
-      }
-      dispatch(requestError(method, urlKey, response.status, response.json, options));
-    }
+		const id = nextId + 1;
+		nextId = nextId + 1;
+		startRequest(dispatch, id, urlKey, data, options, requestOptions);
+		return id;
   };
 }
 

@@ -10,9 +10,10 @@ import reducerRegistry from "../util/reducerRegistry";
 const initialState = { errors: {}};
 
 function getActionState(action, state, status){
-  let { method, url, json, options } = action;
+  let { method, url, json, options, id } = action;
   return Object.assign({}, state, {
     [url]: {
+      id,
       status,
       method,
       url,
