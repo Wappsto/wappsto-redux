@@ -43,7 +43,16 @@ function splitUrlAndOptions(url, options){
 }
 
 function getUrlWithQuery(url, query = {}){
-  let result = config.baseUrl + url;
+	const { service } = getUrlInfo(url);
+	let version;
+	if(config.serviceVersion){
+		if(config.serviceVersion.hasOwnProperty(service)){
+			version = config.serviceVersion[service];
+		} else {
+			version = config.serviceVersion.default;
+		}
+	}
+  let result = config.baseUrl + (version ? '/' + version : '') + url;
   if(Object.keys(query).length > 0){
 		result += result.indexOf('?') === -1 ? '?': '&';
     result += querystring.stringify(query);
@@ -99,7 +108,7 @@ function requestError(id, method, url, responseStatus, json, options){
 }
 
 function dispatchEntitiesAction(dispatch, method, url, json, options){
-  let { service, parent } = getUrlInfo(url);
+  const { service, parent } = getUrlInfo(url);
   switch(method){
     case 'GET':
       dispatch(addEntities(service, json, { reset: false, ...options, parent }));
