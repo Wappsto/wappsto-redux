@@ -201,7 +201,7 @@ export function makeRequest(method, url, data, options = {}) {
 		let urlKey = method === 'GET' ? requestOptions.url.replace(config.baseUrl, '') : url;
     if(state.request[urlKey] && state.request[urlKey].status === 'pending'){
       // console.log('a request with the same url is already pending');
-      return state.request[urlKey].id;
+      return;
     }
 		const id = nextId + 1;
 		nextId = nextId + 1;
