@@ -32,13 +32,13 @@ const stateSelector = state => state.entities;
 const makeStateTypeSelector = () => createSelector(
   stateSelector,
   (_, type) => type,
-  (entities, type) => entities[getTreeName(type)]
+  (entities, type) => entities && entities[getTreeName(type)]
 );
 
 const makeParentStateTypeSelector = () => createSelector(
   stateSelector,
   (_, _1, options) => options && options.parent && options.parent.type,
-  (entities, type) => entities[getTreeName(type)]
+  (entities, type) => entities && entities[getTreeName(type)]
 );
 
 const makeParentSelector = () => {
@@ -47,7 +47,7 @@ const makeParentSelector = () => {
     parentStateTypeSelector,
     (_, _1, options) => options && options.parent && options.parent.id,
     (entities, id) => {
-      if(id){
+      if(id && entities){
         return entities[id];
       }
       return null;

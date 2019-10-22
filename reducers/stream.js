@@ -9,7 +9,7 @@ export default function reducer(state = initialState, action){
       switch(action.status){
         case status.RECONNECTING:
           state = Object.assign({}, state);
-          let count = state[action.name].count || 0;
+          let count = (state[action.name] && state[action.name].count) || 0;
           if(action.increment){
             count++;
           }
@@ -23,8 +23,12 @@ export default function reducer(state = initialState, action){
           break;
         case status.LOST:
           state = Object.assign({}, state);
-          state[action.name].status = action.status;
-          state[action.name].json = action.json
+          state[action.name] = {
+            ...(state[action.name] || {}),
+            name: action.name,
+            status: action.status,
+            json: action.json,
+          };
           break;
         default:
           state = Object.assign({}, state);

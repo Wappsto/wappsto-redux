@@ -1,6 +1,6 @@
 import querystring from 'querystring';
 import config from '../config';
-import { getUrlInfo } from '../util/helpers';
+import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
 import { addSession, invalidSession, removeSession } from './session';
 
@@ -44,14 +44,7 @@ function splitUrlAndOptions(url, options){
 
 function getUrlWithQuery(url, query = {}){
 	const { service } = getUrlInfo(url);
-	let version;
-	if(config.serviceVersion){
-		if(config.serviceVersion.hasOwnProperty(service)){
-			version = config.serviceVersion[service];
-		} else {
-			version = config.serviceVersion.default;
-		}
-	}
+	const version = getServiceVersion(service);
   let result = config.baseUrl + (version ? '/' + version : '') + url;
   if(Object.keys(query).length > 0){
 		result += result.indexOf('?') === -1 ? '?': '&';
@@ -201,7 +194,7 @@ export function makeRequest(method, url, data, options = {}) {
 		let urlKey = method === 'GET' ? requestOptions.url.replace(config.baseUrl, '') : url;
     if(state.request[urlKey] && state.request[urlKey].status === 'pending'){
       // console.log('a request with the same url is already pending');
-      return;
+      return -1;
     }
 		const id = nextId + 1;
 		nextId = nextId + 1;

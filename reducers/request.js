@@ -7,7 +7,15 @@ import {
 } from "../actions/request";
 import reducerRegistry from "../util/reducerRegistry";
 
-const initialState = { errors: {}};
+const initialState = { errors: {
+  sameUrl: {
+    id: -1,
+    status: 'error',
+    json: {
+      code: 'internal_concurrency'
+    }
+  }
+}};
 
 function getActionState(action, state, status){
   let { method, url, json, options, id } = action;

@@ -1,3 +1,5 @@
+import config from '../config';
+
 export function isUUID(data){
   try {
     if (data.match(/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-b8-9][a-f0-9]{3}-[a-f0-9]{12}$/i).length > 0) {
@@ -23,4 +25,15 @@ export function getUrlInfo(url, skip = 0){
     }
   }
   return { service, id, parent };
+}
+
+export function getServiceVersion(service) {
+  if (service && config.serviceVersion) {
+    if (config.serviceVersion.hasOwnProperty(service)) {
+      return config.serviceVersion[service];
+    } else {
+      return config.serviceVersion.default;
+    }
+  }
+  return undefined;
 }

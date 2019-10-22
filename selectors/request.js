@@ -62,7 +62,7 @@ export const makeRequestIdSelector = () => createSelector(
   (_, id) => id,
   (requests, id) => {
     let request;
-    if(id){
+    if(id > 0){
       request = getRequestById(requests, id);
       if(!request){
         request = getRequestById(requests.errors, id);
