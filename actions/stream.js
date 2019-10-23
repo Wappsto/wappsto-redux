@@ -5,7 +5,7 @@ import { _request } from './request';
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
-import schemaTree from '../util/schemaTree';
+import schemas from '../util/schemas';
 
 export const UPDATE_STREAM = 'UPDATE_STREAM';
 export const REMOVE_STREAM = 'REMOVE_STREAM';
@@ -125,11 +125,12 @@ async function _createStream(streamJSON, session, dispatch, options) {
 }
 
 function _addChildren(message, state){
-  let dataType = message.meta_object.type;
-  let data = message[dataType] || message.data;
-  if(schemaTree[dataType] && schemaTree[dataType].dependencies){
-    let cachedData = state.entities[schemaTree[dataType].name] && state.entities[schemaTree[dataType].name][data.meta.id];
-    schemaTree[dataType].dependencies.forEach(({key, type}) => {
+  const dataType = message.meta_object.type;
+  const data = message[dataType] || message.data;
+  const st = schemas.getSchemaTree(dataType);
+  if(st.dependencies){
+    const cachedData = state.entities[st.name] && state.entities[st.name][data.meta.id];
+    st.dependencies.forEach(({key, type}) => {
       data[key] = cachedData ? cachedData[key] : ( type === 'many' ? [] : undefined );
     });
   }
@@ -180,7 +181,8 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
             // since stream does not have child list, I'm going to add it from cached store state
             _addChildren(message, state);
             if(message.meta_object.type === 'state'){
-              if(schemaTree.state && schemaTree.state.name && state.entities[schemaTree.state.name].hasOwnProperty(message.meta_object.id)){
+              const st = schemas.getSchemaTree('state');
+              if(state.entities[st.name] && state.entities[st.name].hasOwnProperty(message.meta_object.id)){
                 dispatch(addEntities(message.meta_object.type, message[message.meta_object.type]  || message.data, { reset: false }));
               } else {
                 let { parent } = getUrlInfo(message.path, 1);

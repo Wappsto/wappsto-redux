@@ -8,7 +8,6 @@ export const REQUEST_PENDING = 'REQUEST_PENDING';
 export const REQUEST_ERROR = 'REQUEST_ERROR';
 export const REQUEST_SUCCESS = 'REQUEST_SUCCESS';
 export const REMOVE_REQUEST = 'REMOVE_REQUEST';
-export const REMOVE_REQUEST_ERROR = 'REMOVE_REQUEST_ERROR';
 
 function getQueryObj(query) {
 	var urlParams = {};
@@ -42,14 +41,14 @@ function splitUrlAndOptions(url, options){
   }
 }
 
-function getUrlWithQuery(url, query = {}){
+function getUrlWithQuery(url, options){
 	const { service } = getUrlInfo(url);
-	const version = getServiceVersion(service);
+	const version = options.version || getServiceVersion(service);
   let result = config.baseUrl + (version ? '/' + version : '') + url;
-  if(Object.keys(query).length > 0){
+  if(options.query && Object.keys(options.query).length > 0){
 		result += result.indexOf('?') === -1 ? '?': '&';
-    result += querystring.stringify(query);
-  }
+    result += querystring.stringify(options.query);
+	}
   return result;
 }
 
@@ -61,7 +60,7 @@ function getOptions(method, url, data, options, sessionJSON){
   if(['PUT' , 'PATCH', 'POST'].indexOf(method) !== -1){
     requestOptions.body = JSON.stringify(data);
   }
-  requestOptions.url = getUrlWithQuery(url, options.query);
+  requestOptions.url = getUrlWithQuery(url, options);
   return requestOptions;
 }
 
@@ -100,8 +99,7 @@ function requestError(id, method, url, responseStatus, json, options){
   }
 }
 
-function dispatchEntitiesAction(dispatch, method, url, json, options){
-  const { service, parent } = getUrlInfo(url);
+function dispatchEntitiesAction(dispatch, method, url, json, options, service, parent){
   switch(method){
     case 'GET':
       dispatch(addEntities(service, json, { reset: false, ...options, parent }));
@@ -128,10 +126,11 @@ function dispatchSessionAction(dispatch, method, url, json, options){
 }
 
 function dispatchMethodAction(dispatch, method, url, json, options){
-  if(url.startsWith('/session')){
+	const { service, parent } = getUrlInfo(url);
+  if(service === 'session'){
     dispatchSessionAction(dispatch, method, url, json, options);
   } else {
-    dispatchEntitiesAction(dispatch, method, url, json, options);
+    dispatchEntitiesAction(dispatch, method, url, json, options, service, parent);
   }
 }
 
@@ -153,8 +152,8 @@ export let _request = async (options) => {
   }
 };
 
-async function startRequest(dispatch, id, urlKey, data, options, requestOptions){
-	dispatch(requestPending(id, requestOptions.method, urlKey, data, options));
+async function startRequest(dispatch, id, url, data, options, requestOptions){
+	dispatch(requestPending(id, requestOptions.method, url, data, options));
 	let response;
 	try{
 		response = await _request(requestOptions);
@@ -162,13 +161,13 @@ async function startRequest(dispatch, id, urlKey, data, options, requestOptions)
 		response = e;
 	}
 	if(response.ok){
-		dispatchMethodAction(dispatch, requestOptions.method, urlKey, response.json, options);
-		dispatch(requestSuccess(id, requestOptions.method, urlKey, response.status, response.json, options));
+		dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
+		dispatch(requestSuccess(id, requestOptions.method, url, response.status, response.json, options));
 	} else {
 		if(response.json && response.json.code === 9900025){
 			dispatch(invalidSession());
 		}
-		dispatch(requestError(id, requestOptions.method, urlKey, response.status, response.json, options));
+		dispatch(requestError(id, requestOptions.method, url, response.status, response.json, options));
 	}
 }
 
@@ -186,38 +185,20 @@ export function makeRequest(method, url, data, options = {}) {
       return;
     }
     method = method.toUpperCase();
-    let result = splitUrlAndOptions(url, options);
-    url = result.url;
-    options = result.options;
-    let state = getState();
-		let requestOptions = getOptions(method, url, data, options, state.session);
-		let urlKey = method === 'GET' ? requestOptions.url.replace(config.baseUrl, '') : url;
-    if(state.request[urlKey] && state.request[urlKey].status === 'pending'){
-      // console.log('a request with the same url is already pending');
-      return -1;
-    }
-		const id = nextId + 1;
-		nextId = nextId + 1;
-		startRequest(dispatch, id, urlKey, data, options, requestOptions);
+    const result = splitUrlAndOptions(url, options);
+    const state = getState();
+		const requestOptions = getOptions(method, result.url, data, result.options, state.session);
+		const id = nextId;
+		nextId += 1;
+		startRequest(dispatch, id, url, data, options, requestOptions);
 		return id;
   };
 }
 
-export function removeRequest(url, method, query){
-	const urlKey = getUrlWithQuery(url, query);
+export function removeRequest(id){
   return {
     type: REMOVE_REQUEST,
-    url: urlKey,
-    method
-  }
-}
-
-export function removeRequestError(url, method, query){
-	const urlKey = getUrlWithQuery(url, query);
-  return {
-    type: REMOVE_REQUEST_ERROR,
-    url: urlKey,
-    method
+    id
   }
 }
 

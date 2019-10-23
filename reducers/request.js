@@ -2,30 +2,23 @@ import {
   REQUEST_PENDING,
   REQUEST_ERROR,
   REQUEST_SUCCESS,
-  REMOVE_REQUEST,
-  REMOVE_REQUEST_ERROR
+  REMOVE_REQUEST
 } from "../actions/request";
 import reducerRegistry from "../util/reducerRegistry";
 
-const initialState = { errors: {
-  sameUrl: {
-    id: -1,
-    status: 'error',
-    json: {
-      code: 'internal_concurrency'
-    }
-  }
-}};
+const initialState = {};
 
 function getActionState(action, state, status){
-  let { method, url, json, options, id } = action;
+  let { method, url, json, options, id, responseStatus, body } = action;
   return Object.assign({}, state, {
-    [url]: {
+    [id]: {
       id,
       status,
       method,
       url,
+      body,
       json,
+      responseStatus,
       options
     }
   });
@@ -34,27 +27,14 @@ function getActionState(action, state, status){
 export default function reducer(state = initialState, action){
   switch(action.type){
     case REQUEST_PENDING:
-      state = getActionState(action, state, "pending");
-      delete state.errors[action.method + "_" + action.url];
-      state[action.url].body = action.body;
-      return state;
+      return getActionState(action, state, "pending");
     case REQUEST_SUCCESS:
       return getActionState(action, state, "success");
     case REQUEST_ERROR:
-      state = getActionState(action, state, "error");
-      state[action.url].responseStatus = action.responseStatus;
-      state.errors[action.method + "_" + action.url] = state[action.url];
-      return state;
+      return getActionState(action, state, "error");
     case REMOVE_REQUEST:
       state = Object.assign({}, state);
-      delete state[action.url];
-      if(action.method){
-        delete state.errors[action.method + "_" + action.url]
-      }
-      return state;
-    case REMOVE_REQUEST_ERROR:
-      state = Object.assign({}, state);
-      delete state.errors[action.method + "_" + action.url]
+      delete state[action.id];
       return state;
     default:
       return state;
