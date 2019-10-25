@@ -102,9 +102,34 @@ export const makeEntitySelector = () => {
   );
 }
 
+function shallowEqualArrays(arrA, arrB) {
+  if (arrA === arrB) {
+    return true;
+  }
+
+  if (!arrA || !arrB) {
+    return false;
+  }
+
+  const len = arrA.length;
+
+  if (arrB.length !== len) {
+    return false;
+  }
+
+  for (var i = 0; i < len; i++) {
+    if (arrA[i] !== arrB[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 export const makeEntitiesSelector = () => {
   const stateTypeSelector = makeStateTypeSelector();
   const parentSelector = makeParentSelector();
+  let old = [];
   return createSelector(
     stateTypeSelector,
     parentSelector,
@@ -159,7 +184,13 @@ export const makeEntitiesSelector = () => {
       } else {
         result = defaultArr;
       }
-      return result.slice(0, options.limit);
+      result = result.slice(0, options.limit);
+      if(shallowEqualArrays(result, old)){
+        return old;
+      } else {
+        old = result;
+        return result;
+      }
     }
   );
 }

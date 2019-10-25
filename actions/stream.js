@@ -57,7 +57,7 @@ export function openStream(streamJSON = {}, session, options){
     if(!session){
       session = getState().session && getState().session.meta.id;
     }
-    _startStream(streamJSON, session, getState, dispatch, options);
+    return _startStream(streamJSON, session, getState, dispatch, options);
   };
 }
 
@@ -146,10 +146,12 @@ function _clearStreamTimeouts(stream){
 
 function _startStream(stream, session, getState, dispatch, options, reconnecting){
   let url = getUrl(options, true);
-  if(stream.meta.id){
+  if(stream.meta && stream.meta.id){
     url += '/' + stream.meta.id + '?x-session=' + session;
   } else {
-    url += '/open?x-session=' + session + '&' + querystring.stringify(stream);
+    const streamClone = { ...stream };
+    delete streamClone.name;
+    url += '/open?x-session=' + session + '&' + querystring.stringify(streamClone);
   }
   if(window && window.location && window.location.origin && !url.startsWith('http')){
     url = window.location.origin + url;
@@ -239,6 +241,8 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
       dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, stream));
     }
   };
+
+  return ws;
 }
 
 export function initializeStream(streamJSON = {}, session, options){
