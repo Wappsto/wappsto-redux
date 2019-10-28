@@ -37,15 +37,27 @@ export const steps = {
 }
 
 export function updateStream(name, status, step, ws, json, increment){
-  return {
-    type: UPDATE_STREAM,
-    name,
-    status,
-    step,
-    ws,
-    json,
-    increment
+  const obj = { type: UPDATE_STREAM };
+  if(ws !== undefined){
+    websockets[name] = ws;
+    obj.ws = ws;
   }
+  if(name !== undefined){
+    obj.name = name;
+  }
+  if(status !== undefined){
+    obj.status = status;
+  }
+  if(step !== undefined){
+    obj.step = step;
+  }
+  if(json !== undefined){
+    obj.json = json;
+  }
+  if(increment !== undefined){
+    obj.increment = increment;
+  }
+  return obj;
 }
 
 export function openStream(streamJSON = {}, session, options){
@@ -61,10 +73,11 @@ export function openStream(streamJSON = {}, session, options){
   };
 }
 
-export function closeStream(name){
+export function closeStream(name, silent = false){
   return (dispatch, getState) => {
     _clearStreamTimeouts({ name });
     if (websockets[name]) {
+      websockets[name].silent = silent;
       websockets[name].stop = true;
       websockets[name].close();
     }
@@ -228,7 +241,9 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
       if(!reconnecting){
         let lostTimeout = setTimeout(() => {
           _clearStreamTimeouts(stream);
-          dispatch(updateStream(stream.name, status.LOST, null, null, stream));
+          if(!ws.silent){
+            dispatch(updateStream(stream.name, status.LOST, null, null, stream));
+          }
           if (websockets[stream.name]) {
             websockets[stream.name].stop = true;
             websockets[stream.name].close();
@@ -236,9 +251,13 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
         }, lostTimer);
         timeouts[stream.name].lostTimeout = lostTimeout;
       }
-      dispatch(updateStream(stream.name, status.RECONNECTING, steps.CONNECTING.WAITING, ws, stream, true));
+      if(!ws.silent){
+        dispatch(updateStream(stream.name, status.RECONNECTING, steps.CONNECTING.WAITING, ws, stream, true));
+      }
     } else {
-      dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, stream));
+      if(!ws.silent){
+        dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, stream));
+      }
     }
   };
 

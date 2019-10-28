@@ -14,31 +14,19 @@ export default function reducer(state = initialState, action){
             count++;
           }
           state[action.name] = {
-            name: action.name,
-            status: action.status,
-            step: action.step,
-            ws: action.ws,
+            ...state[action.name] || {},
+            ...action,
             count
-          }
-          break;
-        case status.LOST:
-          state = Object.assign({}, state);
-          state[action.name] = {
-            ...(state[action.name] || {}),
-            name: action.name,
-            status: action.status,
-            json: action.json,
           };
+          delete state[action.name].type;
           break;
         default:
           state = Object.assign({}, state);
           state[action.name] = {
-            name: action.name,
-            status: action.status,
-            step: action.step,
-            ws: action.ws,
-            json: action.json
-          }
+            ...state[action.name] || {},
+            ...action
+          };
+          delete state[action.name].type;
           break;
       }
       return state;
