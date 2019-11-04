@@ -195,15 +195,13 @@ export const makeEntitiesSelector = () => {
   );
 }
 
-export const getUserData = () => {
-  const stateTypeSelector = makeStateTypeSelector();
-  return createSelector(
-    (state) => stateTypeSelector(state, 'user'),
-    (entities) => {
-      if(entities){
-        return Object.values(entities)[0];
-      }
-      return undefined;
+const userStateSelector = makeStateTypeSelector();
+export const getUserData = createSelector(
+  (state) => userStateSelector(state, 'user'),
+  (entities) => {
+    if(entities){
+      return Object.values(entities)[0];
     }
-  );
-}
+    return undefined;
+  }
+)
