@@ -14,6 +14,7 @@ export function removeEntities(service, ids, options = {}){
   return {
     type: REMOVE_ENTITIES,
     service,
+    ids,
     options
   }
 }
