@@ -215,7 +215,7 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
             break;
           case 'delete':
             let { parent } = getUrlInfo(message.path, 1);
-            dispatch(removeEntities(message.meta_object.type, [message.meta_object.id]), { parent });
+            dispatch(removeEntities(message.meta_object.type, [message.meta_object.id], { parent }));
             break;
           default:
             break;
