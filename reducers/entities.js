@@ -28,7 +28,7 @@ function addEntities(state, type, data){
   return { state, result: data.result };
 }
 
-function removeEntities(state, type, ids){
+function removeEntities(state, type, ids = []){
   ids.forEach(id => {
     let newData = removeEntity(state, type, id);
     state = newData.state;
@@ -77,7 +77,7 @@ function removeChildEntities(state, type, id, child, ids){
   if(element){
     let childDef = def.dependencies.find(d => d.key === child);
     if(childDef){
-      newData = removeEntities(state, child, ids || element[child]);
+      newData = removeEntities(state, child, ids || element[child] || []);
       state = newData.state;
       if(childDef.type === "many"){
         if(ids){

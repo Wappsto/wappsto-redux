@@ -75,24 +75,26 @@ function requestPending(id, method, url, body, options) {
   }
 }
 
-function requestSuccess(id, method, url, responseStatus, json, options){
+function requestSuccess(id, method, url, body, responseStatus, json, options){
   return {
     type: REQUEST_SUCCESS,
 		id,
     method,
     url,
+		body,
     responseStatus,
     json,
     options
   }
 }
 
-function requestError(id, method, url, responseStatus, json, options){
+function requestError(id, method, url, body, responseStatus, json, options){
   return {
     type: REQUEST_ERROR,
 		id,
     method,
     url,
+		body,
     responseStatus,
     json,
     options
@@ -111,6 +113,9 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
       break;
     case 'DELETE':
       dispatch(removeEntities(service, json.deleted, { ...options, parent, reset: false }));
+			if(json.shared_deleted){
+				dispatch(removeEntities(service, json.shared_deleted, { ...options, parent, reset: false }));
+			}
       break;
 		default:
 			break;
@@ -162,12 +167,12 @@ async function startRequest(dispatch, id, url, data, options, requestOptions){
 	}
 	if(response.ok){
 		dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
-		dispatch(requestSuccess(id, requestOptions.method, url, response.status, response.json, options));
+		dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, options));
 	} else {
 		if(response.json && response.json.code === 9900025){
 			dispatch(invalidSession());
 		}
-		dispatch(requestError(id, requestOptions.method, url, response.status, response.json, options));
+		dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, options));
 	}
 }
 
