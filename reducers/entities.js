@@ -52,20 +52,22 @@ function addChildEntities(state, type, id, child, data, reset = true){
   let newData, result;
   let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
-  if(element){
-    let childDef = def.dependencies.find(d => d.key === child);
-    if(childDef){
-      if(childDef.type === "many"){
-        newData = addEntities(state, child, data);
-        result = newData.result;
+  let childDef = def.dependencies.find(d => d.key === child);
+  if(childDef){
+    if(childDef.type === "many"){
+      newData = addEntities(state, child, data);
+      result = newData.result;
+      if(element){
         element[child] = reset ? result : mergeUnique(element[child], result);
-      } else {
-        newData = addEntity(state, child, data);
-        result = newData.result;
+      }
+    } else {
+      newData = addEntity(state, child, data);
+      result = newData.result;
+      if(element){
         element[child] = result;
       }
-      state = newData.state;
     }
+    state = newData.state;
   }
   return { state, result };
 }
@@ -74,20 +76,20 @@ function removeChildEntities(state, type, id, child, ids){
   let result, newData;
   let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
-  if(element){
-    let childDef = def.dependencies.find(d => d.key === child);
-    if(childDef){
-      newData = removeEntities(state, child, ids || element[child] || []);
-      state = newData.state;
-      if(childDef.type === "many"){
-        if(ids){
-          result = element[child].filter(c => !ids.includes(c));
-        } else {
-          result = [];
-        }
+  let childDef = def.dependencies.find(d => d.key === child);
+  if(childDef){
+    newData = removeEntities(state, child, ids || (element && element[child]) || []);
+    state = newData.state;
+    if(childDef.type === "many"){
+      if(ids && element){
+        result = element[child].filter(c => !ids.includes(c));
       } else {
-        result = undefined;
+        result = [];
       }
+    } else {
+      result = undefined;
+    }
+    if(element){
       element[child] = result;
     }
   }
