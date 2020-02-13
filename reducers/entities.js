@@ -58,13 +58,17 @@ function addChildEntities(state, type, id, child, data, reset = true){
       newData = addEntities(state, child, data);
       result = newData.result;
       if(element){
-        element[child] = reset ? result : mergeUnique(element[child], result);
+        const newElement = Object.assign({}, element);
+        newElement[child] = reset ? result : mergeUnique(element[child], result);
+        state[def.name][id] = newElement;
       }
     } else {
       newData = addEntity(state, child, data);
       result = newData.result;
       if(element){
-        element[child] = result;
+        const newElement = Object.assign({}, element);
+        newElement[child] = result;
+        state[def.name][id] = newElement;
       }
     }
     state = newData.state;
@@ -90,7 +94,9 @@ function removeChildEntities(state, type, id, child, ids){
       result = undefined;
     }
     if(element){
-      element[child] = result;
+      const newElement = Object.assign({}, element);
+      newElement[child] = result;
+      state[def.name][id] = newElement;
     }
   }
   return { state, result };

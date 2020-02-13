@@ -144,7 +144,9 @@ function _addChildren(message, state){
   if(st.dependencies){
     const cachedData = state.entities[st.name] && state.entities[st.name][data.meta.id];
     st.dependencies.forEach(({key, type}) => {
-      data[key] = cachedData ? cachedData[key] : ( type === 'many' ? [] : undefined );
+      if(!data.hasOwnProperty(key)){
+        data[key] = cachedData ? cachedData[key] : ( type === 'many' ? [] : undefined );
+      }
     });
   }
 }
