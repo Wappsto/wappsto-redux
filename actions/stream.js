@@ -248,6 +248,7 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
           }
           if (websockets[stream.name]) {
             websockets[stream.name].stop = true;
+            websockets[stream.name].silent = true;
             websockets[stream.name].close();
           }
         }, lostTimer);

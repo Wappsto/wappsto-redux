@@ -69,8 +69,8 @@ export const makeEntitySelector = () => {
           // options is an id
           return entities[options];
         } else if(options.constructor === Object){
-          if(parent){
-            if(parent.hasOwnProperty(type)){
+          if(options.parent){
+            if(parent && parent.hasOwnProperty(type)){
               if(parent[type].constructor === Array){
                 for(let i = 0; i < parent[type].length; i++){
                   let id = parent[type][i];
@@ -138,9 +138,9 @@ export const makeEntitiesSelector = () => {
     (entities, parent, type, options={}) => {
       let result;
       if(entities){
-        if(parent){
+        if(options.parent){
           result = [];
-          if(parent.hasOwnProperty(type)){
+          if(parent && parent.hasOwnProperty(type)){
             parent[type].forEach((id) => {
               let found = entities[id];
               if(found){
