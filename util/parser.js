@@ -8,7 +8,7 @@ export function parse(json){
     }
     if(json.meta.type === "attributelist"){
       json.meta.id = json.path;
-      return [json]
+      return [json];
     }
   }
   return json;

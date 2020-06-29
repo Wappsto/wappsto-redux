@@ -1,4 +1,5 @@
-import querystring from 'querystring';
+import querystring from 'query-string';
+import equal from 'deep-equal';
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
@@ -16,7 +17,7 @@ function getQueryObj(query) {
       search = /([^&=]+)=?([^&]*)/g,
       decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
 
-  while ((match = search.exec(query)))
+  while (match = search.exec(query))
      urlParams[decode(match[1])] = decode(match[2]);
 	return urlParams;
 }
@@ -57,7 +58,7 @@ function getOptions(method, url, data, options, sessionJSON){
   if(sessionJSON && sessionJSON.meta && !requestOptions.headers['x-session']){
       requestOptions.headers['x-session'] = sessionJSON.meta.id;
   }
-  if(['PUT' , 'PATCH', 'POST'].indexOf(method) !== -1){
+  if(['GET', 'DELETE'].indexOf(method) === -1){
     requestOptions.body = JSON.stringify(data);
   }
   requestOptions.url = getUrlWithQuery(url, options);
@@ -176,6 +177,21 @@ async function startRequest(dispatch, id, url, data, options, requestOptions){
 	}
 }
 
+function findRequest(state, url, data, options) {
+  for (let id in state.request) {
+    const stateRequest = state.request[id];
+    const rUrl = querystring.parseUrl(stateRequest.url);
+    const parsedUrl = querystring.parseUrl(url);
+    const rQuery = { ...stateRequest.query, ...rUrl.query };
+    const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
+    if (equal(rUrl.url, parsedUrl.url)
+		&& equal(rQuery, query)
+		&& equal(stateRequest.data, data)) {
+      return stateRequest.id;
+    }
+  }
+}
+
 let nextId = 1;
 export function makeRequest(method, url, data, options = {}) {
   return (dispatch, getState) => {
@@ -192,6 +208,10 @@ export function makeRequest(method, url, data, options = {}) {
     method = method.toUpperCase();
     const result = splitUrlAndOptions(url, options);
     const state = getState();
+    const existingRequest = findRequest(state, url, data, options);
+    if (existingRequest) {
+      return existingRequest;
+    }
 		const requestOptions = getOptions(method, result.url, data, result.options, state.session);
 		const id = nextId;
 		nextId += 1;
