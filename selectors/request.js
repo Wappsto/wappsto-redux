@@ -1,5 +1,4 @@
 import { createSelector } from "reselect";
-import querystring from "querystring";
 
 const stateSelector = state => state.request;
 
