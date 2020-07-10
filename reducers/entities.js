@@ -1,4 +1,5 @@
 import { normalize } from 'normalizr';
+import equal from 'deep-equal';
 
 import {
   ADD_ENTITIES,
@@ -57,7 +58,7 @@ function addChildEntities(state, type, id, child, data, reset = true){
     if(childDef.type === "many"){
       newData = addEntities(state, child, data);
       result = newData.result;
-      if(element){
+      if(element && !equal(element[child], data.map(i => i.meta.id))){
         const newElement = Object.assign({}, element);
         newElement[child] = reset ? result : mergeUnique(element[child], result);
         state[def.name][id] = newElement;
@@ -65,7 +66,7 @@ function addChildEntities(state, type, id, child, data, reset = true){
     } else {
       newData = addEntity(state, child, data);
       result = newData.result;
-      if(element){
+      if(element && !equal(element[child], data.meta.id)){
         const newElement = Object.assign({}, element);
         newElement[child] = result;
         state[def.name][id] = newElement;

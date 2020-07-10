@@ -177,14 +177,16 @@ async function startRequest(dispatch, id, url, data, options, requestOptions){
 	}
 }
 
-function findRequest(state, url, data, options) {
+function findRequest(state, url, method, data, options) {
   for (let id in state.request) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
     const parsedUrl = querystring.parseUrl(url);
     const rQuery = { ...stateRequest.query, ...rUrl.query };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
-    if (equal(rUrl.url, parsedUrl.url)
+    if (stateRequest.status === 'pending'
+		&& stateRequest.method === method
+		&& equal(rUrl.url, parsedUrl.url)
 		&& equal(rQuery, query)
 		&& equal(stateRequest.data, data)) {
       return stateRequest.id;
@@ -208,7 +210,7 @@ export function makeRequest(method, url, data, options = {}) {
     method = method.toUpperCase();
     const result = splitUrlAndOptions(url, options);
     const state = getState();
-    const existingRequest = findRequest(state, url, data, options);
+    const existingRequest = findRequest(state, url, method, data, options);
     if (existingRequest) {
       return existingRequest;
     }
