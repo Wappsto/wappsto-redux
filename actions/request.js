@@ -182,7 +182,7 @@ function findRequest(state, url, method, data, options) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
     const parsedUrl = querystring.parseUrl(url);
-    const rQuery = { ...stateRequest.query, ...rUrl.query };
+		const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
     if (stateRequest.status === 'pending'
 		&& stateRequest.method === method
