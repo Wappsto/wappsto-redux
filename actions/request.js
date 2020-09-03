@@ -10,6 +10,12 @@ export const REQUEST_ERROR = 'REQUEST_ERROR';
 export const REQUEST_SUCCESS = 'REQUEST_SUCCESS';
 export const REMOVE_REQUEST = 'REMOVE_REQUEST';
 
+export const STATUS = {
+  pending: 'pending',
+  success: 'success',
+  error: 'error'
+}
+
 function getQueryObj(query) {
 	var urlParams = {};
   var match,
@@ -65,18 +71,19 @@ function getOptions(method, url, data, options, sessionJSON){
   return requestOptions;
 }
 
-function requestPending(id, method, url, body, options) {
+function requestPending(id, method, url, body, options, promise) {
   return {
     type: REQUEST_PENDING,
 		id,
     method,
     url,
     body,
-    options
+    options,
+    promise
   }
 }
 
-function requestSuccess(id, method, url, body, responseStatus, json, options){
+function requestSuccess(id, method, url, body, responseStatus, json, options, promise){
   return {
     type: REQUEST_SUCCESS,
 		id,
@@ -85,11 +92,12 @@ function requestSuccess(id, method, url, body, responseStatus, json, options){
 		body,
     responseStatus,
     json,
-    options
+    options,
+    promise
   }
 }
 
-function requestError(id, method, url, body, responseStatus, json, options){
+function requestError(id, method, url, body, responseStatus, json, options, promise){
   return {
     type: REQUEST_ERROR,
 		id,
@@ -98,7 +106,8 @@ function requestError(id, method, url, body, responseStatus, json, options){
 		body,
     responseStatus,
     json,
-    options
+    options,
+    promise
   }
 }
 
@@ -158,31 +167,13 @@ export let _request = async (options) => {
   }
 };
 
-async function startRequest(dispatch, id, url, data, options, requestOptions){
-	dispatch(requestPending(id, requestOptions.method, url, data, options));
-	let response;
-	try{
-		response = await _request(requestOptions);
-	} catch(e){
-		response = e;
-	}
-	if(response.ok){
-		dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
-		dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, options));
-	} else {
-		if(response.json && response.json.code === 9900025){
-			dispatch(invalidSession());
-		}
-		dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, options));
-	}
-}
-
-function findRequest(state, url, method, data, options) {
+export function findRequest(state, url, method, data, options) {
   for (let id in state.request) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
     const parsedUrl = querystring.parseUrl(url);
-		const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
+    // const rQuery = { ...stateRequest.query, ...rUrl.query };
+    const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
     if (stateRequest.status === 'pending'
 		&& stateRequest.method === method
@@ -195,6 +186,30 @@ function findRequest(state, url, method, data, options) {
 }
 
 let nextId = 1;
+export function startRequest(dispatch, url, method, data, options, session){
+  let promise;
+  const requestOptions = getOptions(method, url, data, options, session);
+  const id = nextId;
+  nextId += 1;
+  
+  const checkResponse = (response) => {
+    if(response.ok){
+      dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
+      dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, options, promise));
+    } else {
+      if(response.json && response.json.code === 9900025){
+        dispatch(invalidSession());
+      }
+      dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, options, promise));
+    }
+    return response;
+  }
+
+  promise = _request(requestOptions).then(checkResponse).catch(checkResponse);
+  dispatch(requestPending(id, requestOptions.method, url, data, options, promise));
+  return {id, promise};
+}
+
 export function makeRequest(method, url, data, options = {}) {
   return (dispatch, getState) => {
     if(method.constructor === Object){
@@ -214,10 +229,7 @@ export function makeRequest(method, url, data, options = {}) {
     if (existingRequest) {
       return existingRequest;
     }
-		const requestOptions = getOptions(method, result.url, data, result.options, state.session);
-		const id = nextId;
-		nextId += 1;
-		startRequest(dispatch, id, url, data, options, requestOptions);
+		const { id } = startRequest(dispatch, result.url, method, data, result.options, state.session);
 		return id;
   };
 }
