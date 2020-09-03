@@ -138,27 +138,17 @@ export const makeEntitiesSelector = () => {
     (entities, parent, type, options={}) => {
       let result;
       if(entities){
-        let filters;
-        if(options instanceof Array){
-          filters = options.map(id => ({meta: {id}}));
-        } else {
-          filters = options.filter;
-          if(filters){
-            if(!(filters instanceof Array)){
-              filters = [filters];
-            }
-            if(!(filters[0] instanceof Object)){
-              filters = filters.map(id => ({meta: {id}}));
-            }
-          }
-        }
         if(options.parent){
           result = [];
           if(parent && parent.hasOwnProperty(type)){
             parent[type].forEach((id) => {
               let found = entities[id];
               if(found){
-                if(filters){
+                if(options.filter){
+                  let filters = options.filter;
+                  if(!(filters instanceof Array)){
+                    filters = [filters];
+                  }
                   for(let i = 0; i < filters.length; i++){
                     if(matchObject(found, filters[i])){
                       result.push(found);
@@ -172,8 +162,12 @@ export const makeEntitiesSelector = () => {
             });
           }
         } else {
-          if(filters){
+          if(options.filter){
+            let filters = options.filter;
             result = [];
+            if(!(filters instanceof Array)){
+              filters = [filters];
+            }
             filters.forEach(filter => {
               for(let key in entities){
                 const val = entities[key];
