@@ -31,9 +31,15 @@ export default function reducer(state = initialState, action){
     case REQUEST_PENDING:
       return getActionState(action, state, STATUS.pending);
     case REQUEST_SUCCESS:
-      return getActionState(action, state, STATUS.success);
+      if(state[action.id]){
+        return getActionState(action, state, STATUS.success);
+      }
+      return state;
     case REQUEST_ERROR:
-      return getActionState(action, state, STATUS.error);
+      if(state[action.id]){
+        return getActionState(action, state, STATUS.error);
+      }
+      return state;
     case REMOVE_REQUEST:
       state = Object.assign({}, state);
       delete state[action.id];

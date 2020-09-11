@@ -155,7 +155,7 @@ export let _request = async (options) => {
   }
 };
 
-export function findRequest(state, url, method, data, options) {
+export function findRequest(state, url, method, data, options = {}) {
   for (let id in state.request) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
@@ -179,7 +179,7 @@ export function startRequest(dispatch, url, method, data, options, session){
   const requestOptions = getOptions(method, url, data, options, session);
   const id = nextId;
   nextId += 1;
-  
+
   const checkResponse = (response) => {
     if(response.ok){
       dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
