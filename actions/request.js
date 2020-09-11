@@ -132,21 +132,9 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
   }
 }
 
-function dispatchSessionAction(dispatch, method, url, json, options){
-  if(method === 'DELETE'){
-    dispatch(removeSession());
-  } else {
-    dispatch(addSession(json, true));
-  }
-}
-
 function dispatchMethodAction(dispatch, method, url, json, options){
 	const { service, parent } = getUrlInfo(url);
-  if(service === 'session'){
-    dispatchSessionAction(dispatch, method, url, json, options);
-  } else {
-    dispatchEntitiesAction(dispatch, method, url, json, options, service, parent);
-  }
+  dispatchEntitiesAction(dispatch, method, url, json, options, service, parent);
 }
 
 export let _request = async (options) => {
@@ -172,6 +160,7 @@ export function findRequest(state, url, method, data, options) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
     const parsedUrl = querystring.parseUrl(url);
+    // const rQuery = { ...stateRequest.query, ...rUrl.query };
     const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
     if (stateRequest.status === 'pending'
@@ -190,13 +179,13 @@ export function startRequest(dispatch, url, method, data, options, session){
   const requestOptions = getOptions(method, url, data, options, session);
   const id = nextId;
   nextId += 1;
-
+  
   const checkResponse = (response) => {
     if(response.ok){
       dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
       dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, options, promise));
     } else {
-      if(response.json && response.json.code === 9900025){
+      if(response.json && response.json.code === 117000000){
         dispatch(invalidSession());
       }
       dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, options, promise));
