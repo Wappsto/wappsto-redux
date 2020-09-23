@@ -136,7 +136,7 @@ function dispatchEntitiesAction(dispatch, method, url, json, text, options, serv
 
 function dispatchMethodAction(dispatch, method, url, json, text, options){
 	const { service, parent } = getUrlInfo(url);
-  if(!service === 'document' && url.startsWith('/file/')){
+  if(service === 'document' && url.startsWith('/file/')){
     dispatchEntitiesAction(dispatch, method, url, json, text, options, 'file');
   } else if(service !== 'file'){
     dispatchEntitiesAction(dispatch, method, url, json, text, options, service, parent);
