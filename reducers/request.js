@@ -10,7 +10,7 @@ import reducerRegistry from "../util/reducerRegistry";
 const initialState = {};
 
 function getActionState(action, state, status){
-  let { method, url, json, options, id, responseStatus, body, promise } = action;
+  let { method, url, json, text, options, id, responseStatus, body, promise } = action;
   return Object.assign({}, state, {
     [id]: {
       id,
@@ -19,6 +19,7 @@ function getActionState(action, state, status){
       url,
       body,
       json,
+      text,
       responseStatus,
       options,
       promise

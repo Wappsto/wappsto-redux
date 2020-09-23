@@ -83,7 +83,7 @@ function requestPending(id, method, url, body, options, promise) {
   }
 }
 
-function requestSuccess(id, method, url, body, responseStatus, json, options, promise){
+function requestSuccess(id, method, url, body, responseStatus, json, text, options, promise){
   return {
     type: REQUEST_SUCCESS,
 		id,
@@ -92,12 +92,13 @@ function requestSuccess(id, method, url, body, responseStatus, json, options, pr
 		body,
     responseStatus,
     json,
+    text,
     options,
     promise
   }
 }
 
-function requestError(id, method, url, body, responseStatus, json, options, promise){
+function requestError(id, method, url, body, responseStatus, json, text, options, promise){
   return {
     type: REQUEST_ERROR,
 		id,
@@ -106,25 +107,26 @@ function requestError(id, method, url, body, responseStatus, json, options, prom
 		body,
     responseStatus,
     json,
+    text,
     options,
     promise
   }
 }
 
-function dispatchEntitiesAction(dispatch, method, url, json, options, service, parent){
+function dispatchEntitiesAction(dispatch, method, url, json, text, options, service, parent){
   switch(method){
     case 'GET':
-      dispatch(addEntities(service, json, { reset: false, ...options, parent }));
+      dispatch(addEntities(service, json, text, { reset: false, ...options, parent }));
       break;
     case 'POST':
     case 'PATCH':
     case 'PUT':
-      dispatch(addEntities(service, json, { ...options, parent, reset: false }));
+      dispatch(addEntities(service, json, text, { ...options, parent, reset: false }));
       break;
     case 'DELETE':
 			const deleted = [...(json.deleted || []), ...(json.shared_deleted || [])];
       if(deleted.length > 0){
-				dispatch(removeEntities(service, deleted, { ...options, parent, reset: false }));
+				dispatch(removeEntities(service, deleted, text, { ...options, parent, reset: false }));
 			}
       break;
 		default:
@@ -132,26 +134,31 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
   }
 }
 
-function dispatchMethodAction(dispatch, method, url, json, options){
+function dispatchMethodAction(dispatch, method, url, json, text, options){
 	const { service, parent } = getUrlInfo(url);
-  dispatchEntitiesAction(dispatch, method, url, json, options, service, parent);
+  if(!service === 'document' && url.startsWith('/file/')){
+    dispatchEntitiesAction(dispatch, method, url, json, text, options, 'file');
+  } else if(service !== 'file'){
+    dispatchEntitiesAction(dispatch, method, url, json, text, options, service, parent);
+  }
 }
 
 export let _request = async (options) => {
   try{
-    let response = await fetch(options.url, options);
+    const response = await fetch(options.url, options);
     try{
-      let json = await response.json();
+      const json = await response.clone().json();
       return {
         ok: response.ok,
         status: response.status,
         json
       };
     }catch(e){
-      return { ok: response.ok, status: response.status };
+      const text = await response.clone().text();
+      return { ok: response.ok, status: response.status, text };
     }
   } catch(e){
-    return { ok: false, status: e.status };
+    return { ok: response.ok || false, status: e.status };
   }
 };
 
@@ -160,7 +167,6 @@ export function findRequest(state, url, method, data, options = {}) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
     const parsedUrl = querystring.parseUrl(url);
-    // const rQuery = { ...stateRequest.query, ...rUrl.query };
     const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
     if (stateRequest.status === 'pending'
@@ -182,13 +188,13 @@ export function startRequest(dispatch, url, method, data, options, session){
 
   const checkResponse = (response) => {
     if(response.ok){
-      dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
-      dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, options, promise));
+      dispatchMethodAction(dispatch, requestOptions.method, url, response.json, response.text, options);
+      dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, response.text, options, promise));
     } else {
       if(response.json && response.json.code === 117000000){
         dispatch(invalidSession());
       }
-      dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, options, promise));
+      dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, response.text, options, promise));
     }
     return response;
   }
