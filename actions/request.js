@@ -113,20 +113,20 @@ function requestError(id, method, url, body, responseStatus, json, text, options
   }
 }
 
-function dispatchEntitiesAction(dispatch, method, url, json, text, options, service, parent){
+function dispatchEntitiesAction(dispatch, method, url, json, options, service, parent){
   switch(method){
     case 'GET':
-      dispatch(addEntities(service, json, text, { reset: false, ...options, parent }));
+      dispatch(addEntities(service, json, { reset: false, ...options, parent }));
       break;
     case 'POST':
     case 'PATCH':
     case 'PUT':
-      dispatch(addEntities(service, json, text, { ...options, parent, reset: false }));
+      dispatch(addEntities(service, json, { ...options, parent, reset: false }));
       break;
     case 'DELETE':
 			const deleted = [...(json.deleted || []), ...(json.shared_deleted || [])];
       if(deleted.length > 0){
-				dispatch(removeEntities(service, deleted, text, { ...options, parent, reset: false }));
+				dispatch(removeEntities(service, deleted, { ...options, parent, reset: false }));
 			}
       break;
 		default:
@@ -134,12 +134,12 @@ function dispatchEntitiesAction(dispatch, method, url, json, text, options, serv
   }
 }
 
-function dispatchMethodAction(dispatch, method, url, json, text, options){
+function dispatchMethodAction(dispatch, method, url, json, options){
 	const { service, parent } = getUrlInfo(url);
   if(service === 'document' && url.startsWith('/file/')){
-    dispatchEntitiesAction(dispatch, method, url, json, text, options, 'file');
+    dispatchEntitiesAction(dispatch, method, url, json, options, 'file');
   } else if(service !== 'file'){
-    dispatchEntitiesAction(dispatch, method, url, json, text, options, service, parent);
+    dispatchEntitiesAction(dispatch, method, url, json, options, service, parent);
   }
 }
 
@@ -158,7 +158,7 @@ export let _request = async (options) => {
       return { ok: response.ok, status: response.status, text };
     }
   } catch(e){
-    return { ok: response.ok || false, status: e.status };
+    return { ok: false, status: e.status };
   }
 };
 
@@ -188,7 +188,7 @@ export function startRequest(dispatch, url, method, data, options, session){
 
   const checkResponse = (response) => {
     if(response.ok){
-      dispatchMethodAction(dispatch, requestOptions.method, url, response.json, response.text, options);
+      dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
       dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, response.text, options, promise));
     } else {
       if(response.json && response.json.code === 117000000){
