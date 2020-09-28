@@ -145,6 +145,11 @@ function dispatchMethodAction(dispatch, method, url, json, options){
 
 export let _request = async (options) => {
   try{
+    options.headers = {
+      'Accept' : 'application/json',
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
     const response = await fetch(options.url, options);
     try{
       const json = await response.clone().json();
