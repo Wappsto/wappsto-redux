@@ -23,8 +23,19 @@ function getQueryObj(query) {
       search = /([^&=]+)=?([^&]*)/g,
       decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
 
-  while (match = search.exec(query))
-     urlParams[decode(match[1])] = decode(match[2]);
+  while (match = search.exec(query)){
+    const left = decode(match[1]);
+    const right = decode(match[2]);
+    if(urlParams.hasOwnProperty(left)){
+      if(urlParams[left].constructor !== Array){
+        urlParams[left] = [urlParams[left]];
+      }
+      urlParams[left].push(right);
+    } else {
+      urlParams[left] = right;
+    }
+  }
+
 	return urlParams;
 }
 
@@ -187,48 +198,45 @@ export function findRequest(state, url, method, data, options = {}) {
 let nextId = 1;
 export function startRequest(dispatch, url, method, data, options, session){
   let promise;
+  const result = splitUrlAndOptions(url, options);
   const requestOptions = getOptions(method, url, data, options, session);
   const id = nextId;
   nextId += 1;
 
   const checkResponse = (response) => {
     if(response.ok){
-      dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
-      dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, response.text, options, promise));
+      dispatchMethodAction(dispatch, requestOptions.method, result.url, response.json, result.options);
+      dispatch(requestSuccess(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
     } else {
       if(response.json && response.json.code === 117000000){
         dispatch(invalidSession());
       }
-      dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, response.text, options, promise));
+      dispatch(requestError(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
     }
     return response;
   }
 
   promise = _request(requestOptions).then(checkResponse).catch(checkResponse);
-  dispatch(requestPending(id, requestOptions.method, url, data, options, promise));
+  dispatch(requestPending(id, requestOptions.method, result.url, data, result.options, promise));
   return {id, promise};
 }
 
-export function makeRequest(method, url, data, options = {}) {
+export function makeRequest(options = {}) {
   return (dispatch, getState) => {
-    if(method.constructor === Object){
-      data = method.data || method.body;
-      url = method.url;
-      options = method;
-      method = method.method;
-    }
+    const data = options.data || options.body;
+    const url = options.url;
+    const method = options.method.toUpperCase();
     if(!_request){
       console.log('request function is not set');
       return;
     }
-    method = method.toUpperCase();
     const result = splitUrlAndOptions(url, options);
     const state = getState();
     const existingRequest = findRequest(state, url, method, data, options);
     if (existingRequest) {
       return existingRequest;
     }
-		const { id } = startRequest(dispatch, result.url, method, data, result.options, state.session);
+		const { id } = startRequest(dispatch, url, method, data, options, state.session);
 		return id;
   };
 }
