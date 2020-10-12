@@ -5,14 +5,14 @@ import {
 } from "../actions/session";
 import reducerRegistry from "../util/reducerRegistry";
 
-const initialState = {};
+const initialState = null;
 
 export default function reducer(state = initialState, action){
   switch(action.type){
     case ADD_SESSION:
       return Object.assign({}, state, action.data, { valid: true });
     case REMOVE_SESSION:
-      return {};
+      return initialState;
     case INVALID_SESSION:
       return Object.assign({}, state, {
         valid: false

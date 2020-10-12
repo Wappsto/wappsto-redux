@@ -10,6 +10,12 @@ export const REQUEST_ERROR = 'REQUEST_ERROR';
 export const REQUEST_SUCCESS = 'REQUEST_SUCCESS';
 export const REMOVE_REQUEST = 'REMOVE_REQUEST';
 
+export const STATUS = {
+  pending: 'pending',
+  success: 'success',
+  error: 'error'
+}
+
 function getQueryObj(query) {
 	var urlParams = {};
   var match,
@@ -17,8 +23,19 @@ function getQueryObj(query) {
       search = /([^&=]+)=?([^&]*)/g,
       decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); };
 
-  while (match = search.exec(query))
-     urlParams[decode(match[1])] = decode(match[2]);
+  while (match = search.exec(query)){
+    const left = decode(match[1]);
+    const right = decode(match[2]);
+    if(urlParams.hasOwnProperty(left)){
+      if(urlParams[left].constructor !== Array){
+        urlParams[left] = [urlParams[left]];
+      }
+      urlParams[left].push(right);
+    } else {
+      urlParams[left] = right;
+    }
+  }
+
 	return urlParams;
 }
 
@@ -65,18 +82,19 @@ function getOptions(method, url, data, options, sessionJSON){
   return requestOptions;
 }
 
-function requestPending(id, method, url, body, options) {
+function requestPending(id, method, url, body, options, promise) {
   return {
     type: REQUEST_PENDING,
 		id,
     method,
     url,
     body,
-    options
+    options,
+    promise
   }
 }
 
-function requestSuccess(id, method, url, body, responseStatus, json, options){
+function requestSuccess(id, method, url, body, responseStatus, json, text, options, promise){
   return {
     type: REQUEST_SUCCESS,
 		id,
@@ -85,11 +103,13 @@ function requestSuccess(id, method, url, body, responseStatus, json, options){
 		body,
     responseStatus,
     json,
-    options
+    text,
+    options,
+    promise
   }
 }
 
-function requestError(id, method, url, body, responseStatus, json, options){
+function requestError(id, method, url, body, responseStatus, json, text, options, promise){
   return {
     type: REQUEST_ERROR,
 		id,
@@ -98,7 +118,9 @@ function requestError(id, method, url, body, responseStatus, json, options){
 		body,
     responseStatus,
     json,
-    options
+    text,
+    options,
+    promise
   }
 }
 
@@ -123,66 +145,45 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
   }
 }
 
-function dispatchSessionAction(dispatch, method, url, json, options){
-  if(method === 'DELETE'){
-    dispatch(removeSession());
-  } else {
-    dispatch(addSession(json, true));
-  }
-}
-
 function dispatchMethodAction(dispatch, method, url, json, options){
 	const { service, parent } = getUrlInfo(url);
-  if(service === 'session'){
-    dispatchSessionAction(dispatch, method, url, json, options);
-  } else {
+  if(service === 'document' && url.startsWith('/file/')){
+    dispatchEntitiesAction(dispatch, method, url, json, options, 'file');
+  } else if(service !== 'file'){
     dispatchEntitiesAction(dispatch, method, url, json, options, service, parent);
   }
 }
 
 export let _request = async (options) => {
   try{
-    let response = await fetch(options.url, options);
+    options.headers = {
+      'Accept' : 'application/json',
+      'Content-Type': 'application/json',
+      ...options.headers
+    }
+    const response = await fetch(options.url, options);
     try{
-      let json = await response.json();
+      const json = await response.clone().json();
       return {
         ok: response.ok,
         status: response.status,
         json
       };
     }catch(e){
-      return { ok: response.ok, status: response.status };
+      const text = await response.clone().text();
+      return { ok: response.ok, status: response.status, text };
     }
   } catch(e){
     return { ok: false, status: e.status };
   }
 };
 
-async function startRequest(dispatch, id, url, data, options, requestOptions){
-	dispatch(requestPending(id, requestOptions.method, url, data, options));
-	let response;
-	try{
-		response = await _request(requestOptions);
-	} catch(e){
-		response = e;
-	}
-	if(response.ok){
-		dispatchMethodAction(dispatch, requestOptions.method, url, response.json, options);
-		dispatch(requestSuccess(id, requestOptions.method, url, data, response.status, response.json, options));
-	} else {
-		if(response.json && response.json.code === 9900025){
-			dispatch(invalidSession());
-		}
-		dispatch(requestError(id, requestOptions.method, url, data, response.status, response.json, options));
-	}
-}
-
-function findRequest(state, url, method, data, options) {
+export function findRequest(state, url, method, data, options = {}) {
   for (let id in state.request) {
     const stateRequest = state.request[id];
     const rUrl = querystring.parseUrl(stateRequest.url);
     const parsedUrl = querystring.parseUrl(url);
-		const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
+    const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
     if (stateRequest.status === 'pending'
 		&& stateRequest.method === method
@@ -195,29 +196,47 @@ function findRequest(state, url, method, data, options) {
 }
 
 let nextId = 1;
-export function makeRequest(method, url, data, options = {}) {
-  return (dispatch, getState) => {
-    if(method.constructor === Object){
-      data = method.data || method.body;
-      url = method.url;
-      options = method;
-      method = method.method;
+export function startRequest(dispatch, url, method, data, options, session){
+  let promise;
+  const result = splitUrlAndOptions(url, options);
+  const requestOptions = getOptions(method, url, data, options, session);
+  const id = nextId;
+  nextId += 1;
+
+  const checkResponse = (response) => {
+    if(response.ok){
+      dispatchMethodAction(dispatch, requestOptions.method, result.url, response.json, result.options);
+      dispatch(requestSuccess(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
+    } else {
+      if(response.json && response.json.code === 117000000){
+        dispatch(invalidSession());
+      }
+      dispatch(requestError(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
     }
+    return response;
+  }
+
+  promise = _request(requestOptions).then(checkResponse).catch(checkResponse);
+  dispatch(requestPending(id, requestOptions.method, result.url, data, result.options, promise));
+  return {id, promise};
+}
+
+export function makeRequest(options = {}) {
+  return (dispatch, getState) => {
+    const data = options.data || options.body;
+    const url = options.url;
+    const method = options.method.toUpperCase();
     if(!_request){
       console.log('request function is not set');
       return;
     }
-    method = method.toUpperCase();
     const result = splitUrlAndOptions(url, options);
     const state = getState();
     const existingRequest = findRequest(state, url, method, data, options);
     if (existingRequest) {
       return existingRequest;
     }
-		const requestOptions = getOptions(method, result.url, data, result.options, state.session);
-		const id = nextId;
-		nextId += 1;
-		startRequest(dispatch, id, url, data, options, requestOptions);
+		const { id } = startRequest(dispatch, url, method, data, options, state.session);
 		return id;
   };
 }

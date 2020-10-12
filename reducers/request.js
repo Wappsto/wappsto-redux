@@ -2,14 +2,15 @@ import {
   REQUEST_PENDING,
   REQUEST_ERROR,
   REQUEST_SUCCESS,
-  REMOVE_REQUEST
+  REMOVE_REQUEST,
+  STATUS
 } from "../actions/request";
 import reducerRegistry from "../util/reducerRegistry";
 
 const initialState = {};
 
 function getActionState(action, state, status){
-  let { method, url, json, options, id, responseStatus, body } = action;
+  let { method, url, json, text, options, id, responseStatus, body, promise } = action;
   return Object.assign({}, state, {
     [id]: {
       id,
@@ -18,8 +19,10 @@ function getActionState(action, state, status){
       url,
       body,
       json,
+      text,
       responseStatus,
-      options
+      options,
+      promise
     }
   });
 }
@@ -27,11 +30,17 @@ function getActionState(action, state, status){
 export default function reducer(state = initialState, action){
   switch(action.type){
     case REQUEST_PENDING:
-      return getActionState(action, state, "pending");
+      return getActionState(action, state, STATUS.pending);
     case REQUEST_SUCCESS:
-      return getActionState(action, state, "success");
+      if(state[action.id]){
+        return getActionState(action, state, STATUS.success);
+      }
+      return state;
     case REQUEST_ERROR:
-      return getActionState(action, state, "error");
+      if(state[action.id]){
+        return getActionState(action, state, STATUS.error);
+      }
+      return state;
     case REMOVE_REQUEST:
       state = Object.assign({}, state);
       delete state[action.id];

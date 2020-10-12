@@ -174,15 +174,15 @@ export const makeEntitiesSelector = () => {
         } else {
           if(filters){
             result = [];
-            filters.forEach(filter => {
-              for(let key in entities){
-                const val = entities[key];
-                if(matchObject(val, filter)){
+            for(let key in entities){
+              const val = entities[key];
+              for(let i = 0; i < filters.length; i++){
+                if(matchObject(val, filters[i])){
                   result.push(val);
                   break;
                 }
               }
-            });
+            }
           } else {
             result = Object.values(entities);
           }
