@@ -3,7 +3,7 @@ import equal from 'deep-equal';
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
-import { addSession, invalidSession, removeSession } from './session';
+import { invalidSession } from './session';
 
 export const REQUEST_PENDING = 'REQUEST_PENDING';
 export const REQUEST_ERROR = 'REQUEST_ERROR';
@@ -15,6 +15,9 @@ export const STATUS = {
   success: 'success',
   error: 'error'
 }
+
+const pendingRequestsCache = {};
+let nextPendingId = 0;
 
 function getQueryObj(query) {
 	var urlParams = {};
@@ -178,47 +181,58 @@ export let _request = async (options) => {
   }
 };
 
-export function findRequest(state, url, method, data, options = {}) {
-  for (let id in state.request) {
-    const stateRequest = state.request[id];
-    const rUrl = querystring.parseUrl(stateRequest.url);
+export function findRequest(url, method, data, options = {}) {
+  for (let id in pendingRequestsCache) {
+    const pendingRequest = pendingRequestsCache[id];
+    const rUrl = querystring.parseUrl(pendingRequest.url);
     const parsedUrl = querystring.parseUrl(url);
-    const rQuery = { ...stateRequest.query, ...rUrl.query, ...(stateRequest.options.query || {}) };
+    const rQuery = { ...pendingRequest.query, ...rUrl.query, ...(pendingRequest.options.query || {}) };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
-    if (stateRequest.status === 'pending'
-		&& stateRequest.method === method
+    if (pendingRequest.method === method
 		&& equal(rUrl.url, parsedUrl.url)
 		&& equal(rQuery, query)
-		&& equal(stateRequest.data, data)) {
-      return stateRequest.id;
+		&& equal(pendingRequest.body, data)) {
+      return pendingRequest.promise;
     }
   }
 }
 
-let nextId = 1;
-export function startRequest(dispatch, url, method, data, options, session){
-  let promise;
+export function startRequest(dispatch, url, method, data, options, session, id){
+  let promise, pendingId;
   const result = splitUrlAndOptions(url, options);
   const requestOptions = getOptions(method, url, data, options, session);
-  const id = nextId;
-  nextId += 1;
+  if(id){
+    pendingId = id;
+  } else {
+    pendingId = nextPendingId;
+    nextPendingId++;
+  }
 
   const checkResponse = (response) => {
+    delete pendingRequestsCache[pendingId];
     if(response.ok){
       dispatchMethodAction(dispatch, requestOptions.method, result.url, response.json, result.options);
-      dispatch(requestSuccess(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
+      if(id){
+        dispatch(requestSuccess(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
+      }
     } else {
       if(response.json && response.json.code === 117000000){
         dispatch(invalidSession());
       }
-      dispatch(requestError(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
+      if(id){
+        dispatch(requestError(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
+      }
     }
     return response;
   }
 
   promise = _request(requestOptions).then(checkResponse).catch(checkResponse);
-  dispatch(requestPending(id, requestOptions.method, result.url, data, result.options, promise));
-  return {id, promise};
+  const requestPendingObj = requestPending(pendingId, requestOptions.method, result.url, data, result.options, promise);
+  pendingRequestsCache[pendingId] = requestPendingObj;
+  if(id){
+    dispatch(requestPendingObj);
+  }
+  return promise;
 }
 
 export function makeRequest(options = {}) {
@@ -230,14 +244,13 @@ export function makeRequest(options = {}) {
       console.log('request function is not set');
       return;
     }
-    const result = splitUrlAndOptions(url, options);
-    const state = getState();
-    const existingRequest = findRequest(state, url, method, data, options);
+    const existingRequest = findRequest(url, method, data, options);
     if (existingRequest) {
       return existingRequest;
     }
-		const { id } = startRequest(dispatch, url, method, data, options, state.session);
-		return id;
+    const state = getState();
+		const promise = startRequest(dispatch, url, method, data, options, state.session, options.id);
+		return promise;
   };
 }
 
