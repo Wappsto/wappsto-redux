@@ -181,7 +181,7 @@ export let _request = async (options) => {
   }
 };
 
-export function findRequest(url, method, data, options = {}) {
+function findRequest(url, method, data, options = {}) {
   for (let id in pendingRequestsCache) {
     const pendingRequest = pendingRequestsCache[id];
     const rUrl = querystring.parseUrl(pendingRequest.url);
@@ -226,7 +226,12 @@ export function startRequest(dispatch, url, method, data, options, session, id){
     return response;
   }
 
-  promise = _request(requestOptions).then(checkResponse).catch(checkResponse);
+  promise = findRequest(url, method, data, options);
+  if (!promise) {
+    promise = _request(requestOptions);
+  }
+  promise.then(checkResponse).catch(checkResponse);
+
   const requestPendingObj = requestPending(pendingId, requestOptions.method, result.url, data, result.options, promise);
   pendingRequestsCache[pendingId] = requestPendingObj;
   if(id){
@@ -243,10 +248,6 @@ export function makeRequest(options = {}) {
     if(!_request){
       console.log('request function is not set');
       return;
-    }
-    const existingRequest = findRequest(url, method, data, options);
-    if (existingRequest) {
-      return existingRequest;
     }
     const state = getState();
 		const promise = startRequest(dispatch, url, method, data, options, state.session, options.id);
