@@ -74,7 +74,7 @@ function getUrlWithQuery(url, options){
 }
 
 function getOptions(method, url, data, options, sessionJSON){
-  let requestOptions = {method, headers: options.headers || {}};
+  let requestOptions = {method, headers: options.headers || {}, rawOptions: {...options}};
   if(sessionJSON && sessionJSON.meta && !requestOptions.headers['x-session']){
       requestOptions.headers['x-session'] = sessionJSON.meta.id;
   }
@@ -170,14 +170,15 @@ export let _request = async (options) => {
       return {
         ok: response.ok,
         status: response.status,
-        json
+        json,
+        options
       };
     }catch(e){
       const text = await response.clone().text();
-      return { ok: response.ok, status: response.status, text };
+      return { ok: response.ok, status: response.status, text, options };
     }
   } catch(e){
-    return { ok: false, status: e.status };
+    return { ok: false, status: e.status, options };
   }
 };
 
@@ -197,8 +198,11 @@ function findRequest(url, method, data, options = {}) {
   }
 }
 
-export function startRequest(dispatch, url, method, data, options, session, id){
+export function startRequest(dispatch, options, session){
   let promise, pendingId;
+  const { url, id } = options;
+  const data = options.data || options.body;
+  const method = options.method.toUpperCase();
   const result = splitUrlAndOptions(url, options);
   const requestOptions = getOptions(method, url, data, options, session);
   if(id){
@@ -242,15 +246,12 @@ export function startRequest(dispatch, url, method, data, options, session, id){
 
 export function makeRequest(options = {}) {
   return (dispatch, getState) => {
-    const data = options.data || options.body;
-    const url = options.url;
-    const method = options.method.toUpperCase();
     if(!_request){
       console.log('request function is not set');
       return;
     }
     const state = getState();
-		const promise = startRequest(dispatch, url, method, data, options, state.session, options.id);
+		const promise = startRequest(dispatch, options, state.session);
 		return promise;
   };
 }
