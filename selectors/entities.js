@@ -138,53 +138,60 @@ export const makeEntitiesSelector = () => {
     (entities, parent, type, options={}) => {
       let result;
       if(entities){
-        let filters;
-        if(options instanceof Array){
-          filters = options.map(id => ({meta: {id}}));
+        let filters, ids, lookIn;
+        if(options instanceof String){
+          ids = [options];
+        } else if(options instanceof Array){
+          ids = options;
         } else {
           filters = options.filter;
-          if(filters){
-            if(!(filters instanceof Array)){
-              filters = [filters];
+          ids = options.ids;
+        }
+        if(ids){
+          lookIn = {};
+          ids.forEach(id => {
+            const found = entities[id];
+            if(found){
+              lookIn[id] = found;
             }
-            if(!(filters[0] instanceof Object)){
-              filters = filters.map(id => ({meta: {id}}));
-            }
-          }
+          });
+        } else {
+          lookIn = entities;
         }
         if(options.parent){
           result = [];
           if(parent && parent.hasOwnProperty(type)){
-            parent[type].forEach((id) => {
-              let found = entities[id];
-              if(found){
-                if(filters){
-                  for(let i = 0; i < filters.length; i++){
-                    if(matchObject(found, filters[i])){
-                      result.push(found);
-                      break;
-                    }
+            if(filters){
+              filters.forEach(filter => {
+                parent[type].forEach((id) => {
+                  const found = lookIn[id];
+                  if(found && matchObject(found, filter) && !result.includes(found)){
+                    result.push(found);
                   }
-                } else {
+                });
+              });
+            } else {
+              parent[type].forEach((id) => {
+                const found = lookIn[id];
+                if(found){
                   result.push(found);
                 }
-              }
-            });
+              });
+            }
           }
         } else {
           if(filters){
             result = [];
-            for(let key in entities){
-              const val = entities[key];
-              for(let i = 0; i < filters.length; i++){
-                if(matchObject(val, filters[i])){
+            filters.forEach(filter => {
+              for(let key in lookIn){
+                const val = lookIn[key];
+                if(matchObject(val, filter) && !result.includes(val)){
                   result.push(val);
-                  break;
                 }
               }
-            }
+            });
           } else {
-            result = Object.values(entities);
+            result = Object.values(lookIn);
           }
         }
       } else {
