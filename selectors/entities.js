@@ -139,13 +139,25 @@ export const makeEntitiesSelector = () => {
       let result;
       if(entities){
         let filters, ids, lookIn;
-        if(options instanceof String){
+        if(options.constructor === String){
           ids = [options];
-        } else if(options instanceof Array){
+        } else if(options.constructor === Array){
           ids = options;
         } else {
-          filters = options.filter;
           ids = options.ids;
+          if(options.filter){
+            if(options.filter.constructor === Object){
+              filters = [options.filter];
+            } else if(options.filter.constructor === Array){
+              if(options.filter.length && options.filter[0].constructor === String){
+                ids = [...(options.ids || []), ...options.filter];
+              } else {
+                filters = options.filter;
+              }
+            } else {
+              ids = [...(options.ids || []), options.filter];;
+            }
+          }
         }
         if(ids){
           lookIn = {};
