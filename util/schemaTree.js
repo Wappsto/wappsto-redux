@@ -27,6 +27,17 @@ let schemaTree = {
       "key": "device",
       "type": "many"
     }]
+  },
+  "permission": {
+    "name": "permission",
+    "dependencies": []
+  },
+  "acl": {
+    "name": "acl",
+    "dependencies": [{
+      "key": "permission",
+      "type": "many"
+    }]
   }
 }
 

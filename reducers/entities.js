@@ -54,26 +54,30 @@ function addChildEntities(state, type, id, child, data, reset = true){
   let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
   let childDef = def.dependencies.find(d => d.key === child);
-  if(childDef){
-    if(childDef.type === "many"){
-      newData = addEntities(state, child, data);
-      result = newData.result;
-      if(element && !equal(element[child], data.map(i => i.meta.id))){
-        const newElement = Object.assign({}, element);
-        newElement[child] = reset ? result : mergeUnique(element[child], result);
-        state[def.name][id] = newElement;
-      }
-    } else {
-      newData = addEntity(state, child, data);
-      result = newData.result;
-      if(element && !equal(element[child], data.meta.id)){
-        const newElement = Object.assign({}, element);
-        newElement[child] = result;
-        state[def.name][id] = newElement;
-      }
-    }
-    state = newData.state;
+  if(!childDef){
+    childDef = {
+      "key": child,
+      "type": data.constructor === Array && "many"
+    };
   }
+  if(childDef.type === "many"){
+    newData = addEntities(state, child, data);
+    result = newData.result;
+    if(element && !equal(element[child], data.map(i => i.meta.id))){
+      const newElement = Object.assign({}, element);
+      newElement[child] = reset ? result : mergeUnique(element[child], result);
+      state[def.name][id] = newElement;
+    }
+  } else {
+    newData = addEntity(state, child, data);
+    result = newData.result;
+    if(element && !equal(element[child], data.meta.id)){
+      const newElement = Object.assign({}, element);
+      newElement[child] = result;
+      state[def.name][id] = newElement;
+    }
+  }
+  state = newData.state;
   return { state, result };
 }
 
@@ -82,23 +86,21 @@ function removeChildEntities(state, type, id, child, ids){
   let def = schemas.getSchemaTree(type);
   let element = state[def.name] && state[def.name][id];
   let childDef = def.dependencies.find(d => d.key === child);
-  if(childDef){
-    newData = removeEntities(state, child, ids || (element && element[child]) || []);
-    state = newData.state;
-    if(childDef.type === "many"){
-      if(ids && element){
-        result = element[child].filter(c => !ids.includes(c));
-      } else {
-        result = [];
-      }
+  newData = removeEntities(state, child, ids || (element && element[child]) || []);
+  state = newData.state;
+  if((childDef && childDef.type === "many") || element && element[child] && element[child].constructor === Array){
+    if(ids && element){
+      result = element[child].filter(c => !ids.includes(c));
     } else {
-      result = undefined;
+      result = [];
     }
-    if(element){
-      const newElement = Object.assign({}, element);
-      newElement[child] = result;
-      state[def.name][id] = newElement;
-    }
+  } else {
+    result = undefined;
+  }
+  if(element){
+    const newElement = Object.assign({}, element);
+    newElement[child] = result;
+    state[def.name][id] = newElement;
   }
   return { state, result };
 }
