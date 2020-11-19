@@ -138,7 +138,7 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
       dispatch(addEntities(service, json, { ...options, parent, reset: false }));
       break;
     case 'DELETE':
-			const deleted = [...(json.deleted || []), ...(json.shared_deleted || [])];
+			const deleted = [...(json.deleted || []), ...(json.shared_deleted || []), ...(json.owned_deleted || [])];
       if(deleted.length > 0){
 				dispatch(removeEntities(service, deleted, { ...options, parent, reset: false }));
 			}
