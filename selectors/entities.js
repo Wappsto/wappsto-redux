@@ -63,7 +63,7 @@ export const makeEntitySelector = () => {
     parentSelector,
     (_, type) => type,
     (_, _1, options) => options,
-    (entities, parent, type, options={}) => {
+    (entities, parent, type, options) => {
       if(entities && options){
         if(options.constructor === String){
           // options is an id
