@@ -1,9 +1,11 @@
+import cloneDeep from 'clone-deep';
+
 const cache = {};
 const defaultValues = {};
 
 function initialize(key, value){
   cache[key] = value;
-  defaultValues[key] = value;
+  defaultValues[key] = cloneDeep(value);
 }
 
 function get(key){

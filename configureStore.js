@@ -1,8 +1,8 @@
 import './reducers';
 import { REMOVE_SESSION } from './actions/session';
 import { applyMiddleware, combineReducers, createStore } from 'redux';
-import { clean } from './globalCache';
 import { cancelAllRequests } from './actions/request';
+import { clean } from './globalCache';
 
 import thunk from 'redux-thunk';
 import reducerRegistry from './util/reducerRegistry';
