@@ -1,6 +1,8 @@
 import './reducers';
 import { REMOVE_SESSION } from './actions/session';
 import { applyMiddleware, combineReducers, createStore } from 'redux';
+import { clean } from './globalCache';
+import { cancelAllRequests } from './actions/request';
 
 import thunk from 'redux-thunk';
 import reducerRegistry from './util/reducerRegistry';
@@ -18,6 +20,8 @@ export default function configureStore(initialState = {}) {
     return function rootReducer(state, action){
       if (action.type === REMOVE_SESSION) {
         state = undefined;
+        cancelAllRequests();
+        clean();
       }
       return appReducer(state, action);
     };

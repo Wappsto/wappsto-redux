@@ -164,6 +164,8 @@ export let _request = async (options) => {
       'Content-Type': 'application/json',
       ...options.headers
     }
+    options.controller = new AbortController();
+    options.signal = options.controller.signal;
     const response = await fetch(options.url, options);
     try{
       const json = await response.clone().json();
@@ -265,4 +267,10 @@ export function removeRequest(id){
 
 export function overrideRequest(func){
   _request = func;
+}
+
+export function cancelAllRequests(){
+  for(let key in pendingRequestsCache){
+    pendingRequestsCache[key].options.controller.abort();
+  }
 }
