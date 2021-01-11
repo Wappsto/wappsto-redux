@@ -2,7 +2,7 @@ import './reducers';
 import { REMOVE_SESSION } from './actions/session';
 import { applyMiddleware, combineReducers, createStore } from 'redux';
 import { cancelAllRequests } from './actions/request';
-import { clean } from './globalCache';
+import { trigger } from './events';
 
 import thunk from 'redux-thunk';
 import reducerRegistry from './util/reducerRegistry';
@@ -21,7 +21,7 @@ export default function configureStore(initialState = {}) {
       if (action.type === REMOVE_SESSION) {
         state = undefined;
         cancelAllRequests();
-        clean();
+        trigger('logout');
       }
       return appReducer(state, action);
     };

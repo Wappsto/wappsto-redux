@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/Samislx/wappsto-redux#readme",
   "dependencies": {
-    "clone-deep": "^4.0.1",
     "deep-equal": "^2.0.3",
     "normalizr": "^3.4.1",
     "query-string": "^6.13.1",

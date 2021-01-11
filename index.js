@@ -1,10 +1,6 @@
 import config from './config';
-import configureStore from './configureStore';
-import { overrideRequest } from './actions/request';
-
-export { configureStore };
-
-export { overrideRequest };
+export { default as configureStore } from './configureStore';
+export { overrideRequest } from './actions/request';
 
 export function use(newConfig){
   Object.assign(config, newConfig);
