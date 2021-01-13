@@ -238,6 +238,7 @@ export function startRequest(dispatch, options, session){
   }
   promise.then(checkResponse).catch(checkResponse);
 
+  result.options.controller = requestOptions.controller;
   const requestPendingObj = requestPending(pendingId, requestOptions.method, result.url, data, result.options, promise);
   pendingRequestsCache[pendingId] = requestPendingObj;
   if(id){
@@ -271,6 +272,8 @@ export function overrideRequest(func){
 
 export function cancelAllRequests(){
   for(let key in pendingRequestsCache){
-    pendingRequestsCache[key].options.controller.abort();
+    if(pendingRequestsCache[key].options.abortable !== false){
+      pendingRequestsCache[key].options.controller.abort();
+    }
   }
 }
