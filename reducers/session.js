@@ -14,9 +14,12 @@ export default function reducer(state = initialState, action){
     case REMOVE_SESSION:
       return initialState;
     case INVALID_SESSION:
-      return Object.assign({}, state, {
-        valid: false
-      });
+      if(state && state.meta && state.meta.id){
+        return Object.assign({}, state, {
+          valid: false
+        });
+      }
+      return state;
     default:
       return state;
   }
