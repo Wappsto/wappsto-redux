@@ -164,7 +164,9 @@ export let _request = async (options) => {
       'Content-Type': 'application/json',
       ...options.headers
     }
-    options.controller = new AbortController();
+    if(!options.controller || !options.controller.signal){
+      options.controller = new AbortController();
+    }
     options.signal = options.controller.signal;
     const response = await fetch(options.url, options);
     try{
