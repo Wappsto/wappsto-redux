@@ -170,6 +170,7 @@ export let _request = async (options) => {
     try{
       const json = await response.clone().json();
       return {
+        rawResponse: response,
         ok: response.ok,
         status: response.status,
         json,
@@ -177,10 +178,10 @@ export let _request = async (options) => {
       };
     }catch(e){
       const text = await response.clone().text();
-      return { ok: response.ok, status: response.status, text, options };
+      return { ok: response.ok, status: response.status, text, options, rawResponse: response };
     }
   } catch(e){
-    return { ok: false, status: e.status, options };
+    return { ok: false, status: e.status, options, rawResponse: response };
   }
 };
 
@@ -217,7 +218,9 @@ export function startRequest(dispatch, options, session){
   const checkResponse = (response) => {
     delete pendingRequestsCache[pendingId];
     if(response.ok){
-      dispatchMethodAction(dispatch, requestOptions.method, result.url, response.json, result.options);
+      if(options.dispatchEntities !== false){
+        dispatchMethodAction(dispatch, requestOptions.method, result.url, response.json, result.options);
+      }
       if(id){
         dispatch(requestSuccess(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
       }
