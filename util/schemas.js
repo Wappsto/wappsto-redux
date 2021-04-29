@@ -14,7 +14,7 @@ for(let entity in schemaTree){
   schemaTree[entity].dependencies.forEach(dep => {
     definition[dep.key] = dep.type === "many" ? [schemas[dep.key]] : schemas[dep.key];
   });
-  schemas[entity] = new schema.Entity(schemaTree[entity].name, definition, options);
+  schemas[entity] = new schema.Entity(schemaTree[entity].name || entity, definition, options);
 }
 
 schemas.generateGenericSchema = (name) => {
