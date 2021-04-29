@@ -11,10 +11,13 @@ let schemas = {};
 
 for(let entity in schemaTree){
   let definition = {};
+  if(!schemaTree[entity].name){
+    schemaTree[entity].name = entity;
+  }
   schemaTree[entity].dependencies.forEach(dep => {
     definition[dep.key] = dep.type === "many" ? [schemas[dep.key]] : schemas[dep.key];
   });
-  schemas[entity] = new schema.Entity(schemaTree[entity].name || entity, definition, options);
+  schemas[entity] = new schema.Entity(schemaTree[entity].name, definition, options);
 }
 
 schemas.generateGenericSchema = (name) => {
