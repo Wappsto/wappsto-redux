@@ -183,7 +183,7 @@ export let _request = async (options) => {
       return { ok: response.ok, status: response.status, text, options, rawResponse: response };
     }
   } catch(e){
-    return { ok: false, status: e.status, options, rawResponse: response };
+    return { ok: false, status: e.status, options };
   }
 };
 

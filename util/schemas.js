@@ -18,12 +18,11 @@ for(let entity in schemaTree){
 }
 
 schemas.generateGenericSchema = (name) => {
-  let schemaName = name + "s";
   schemaTree[name] = {
-    name: schemaName,
+    name: name,
     dependencies: []
   }
-  schemas[name] = new schema.Entity(schemaName, {}, options);
+  schemas[name] = new schema.Entity(name, {}, options);
 }
 
 schemas.getSchema = (type) => {
