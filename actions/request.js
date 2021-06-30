@@ -3,7 +3,7 @@ import equal from 'deep-equal';
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
-import { invalidSession } from './session';
+import { invalidSession, limitReached } from './session';
 
 export const REQUEST_PENDING = 'REQUEST_PENDING';
 export const REQUEST_ERROR = 'REQUEST_ERROR';
@@ -227,8 +227,12 @@ export function startRequest(dispatch, options, session){
         dispatch(requestSuccess(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));
       }
     } else {
-      if(response.json && response.json.code === 117000000){
-        dispatch(invalidSession());
+      if(response.json){
+        if(response.json.code === 117000000){
+          dispatch(invalidSession());
+        } else if(response.json.code === 300098){
+          dispatch(limitReached());
+        }
       }
       if(id){
         dispatch(requestError(id, requestOptions.method, result.url, data, response.status, response.json, response.text, result.options, promise));

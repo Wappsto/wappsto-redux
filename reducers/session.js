@@ -1,7 +1,8 @@
 import {
   ADD_SESSION,
   REMOVE_SESSION,
-  INVALID_SESSION
+  INVALID_SESSION,
+  LIMIT_REACHED
 } from "../actions/session";
 import reducerRegistry from "../util/reducerRegistry";
 
@@ -17,6 +18,13 @@ export default function reducer(state = initialState, action){
       if(state && state.meta && state.meta.id){
         return Object.assign({}, state, {
           valid: false
+        });
+      }
+      return state;
+    case LIMIT_REACHED:
+      if(state && state.meta && state.meta.id){
+        return Object.assign({}, state, {
+          limitReached: true
         });
       }
       return state;
