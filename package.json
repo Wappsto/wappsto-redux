@@ -1,31 +1,59 @@
 {
-  "name": "wappsto-redux",
-  "version": "3.5.7",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Wappsto/wappsto-redux.git"
-  },
-  "author": {
-    "name": "Seluxit A/S",
-    "email": "developer@wappsto.com",
-    "url": "https://wappsto.com"
-  },
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/Wappsto/wappsto-redux/issues"
-  },
-  "homepage": "https://github.com/Wappsto/wappsto-redux#readme",
-  "dependencies": {
-    "deep-equal": "^2.0.3",
-    "normalizr": "^3.4.1",
-    "query-string": "^6.13.1",
-    "redux": "^4.0.4",
-    "redux-thunk": "^2.3.0",
-    "reselect": "^4.0.0"
-  }
+    "name": "wappsto-redux",
+    "version": "3.5.7",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "lint": "eslint *.js actions/*.js reducers/*.js selectors/*.js util/*.js",
+        "lint:fix": "eslint --fix *.js actions/*.js reducers/*.js selectors/*.js util/*.js",
+        "prettify": "prettier *.js actions/*.js reducers/*.js selectors/*.js util/*.js --write",
+        "test": "lint-staged"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Wappsto/wappsto-redux.git"
+    },
+    "author": {
+        "name": "Seluxit A/S",
+        "email": "developer@wappsto.com",
+        "url": "https://wappsto.com"
+    },
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/Wappsto/wappsto-redux/issues"
+    },
+    "homepage": "https://github.com/Wappsto/wappsto-redux#readme",
+    "dependencies": {
+        "deep-equal": "^2.0.3",
+        "normalizr": "^3.4.1",
+        "query-string": "^6.13.1",
+        "redux": "^4.0.4",
+        "redux-thunk": "^2.3.0",
+        "reselect": "^4.0.0"
+    },
+    "devDependencies": {
+        "@typescript-eslint/parser": "^5.10.1",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "husky": "^7.0.4",
+        "lint-staged": "^12.3.2",
+        "prettier": "^2.5.1",
+        "react-scripts": "^5.0.0"
+    },
+    "eslintConfig": {
+        "extends": [
+            "react-app",
+            "plugin:prettier/recommended"
+        ]
+    },
+    "prettier": {
+        "printWidth": 90,
+        "bracketSpacing": true,
+        "trailingComma": "es5",
+        "semi": false,
+        "singleQuote": true
+    },
+    "lint-staged": {
+        "*.js": "npm run lint:fix"
+    }
 }
