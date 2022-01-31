@@ -1,3 +1,5 @@
-export default {
-  baseUrl: "/services"
+let config = {
+  baseUrl: '/services',
 }
+
+export default config
