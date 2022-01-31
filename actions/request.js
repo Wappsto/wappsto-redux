@@ -4,6 +4,8 @@ import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
 import { invalidSession, limitReached } from './session';
+import "core-js/stable";
+import "regenerator-runtime/runtime";
 
 export const REQUEST_PENDING = 'REQUEST_PENDING';
 export const REQUEST_ERROR = 'REQUEST_ERROR';
