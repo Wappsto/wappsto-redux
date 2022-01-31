@@ -4,11 +4,11 @@ import configureStore from '../configureStore';
 describe('configureStore', () => {
     it('can create a new store', () => {
         let cs = configureStore();
-        console.log(cs);
+        expect(cs.getState().items).toEqual({});
     });
 
-    it('can create a new store', () => {
+    it('can create a new store with parameters', () => {
         let cs = configureStore({ items: { ['test']: true } });
-        console.log(cs);
+        expect(cs.getState().items['test']).toBe(true);
     });
 });
