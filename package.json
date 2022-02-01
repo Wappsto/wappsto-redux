@@ -7,7 +7,7 @@
         "lint": "eslint *.js actions/*.js reducers/*.js selectors/*.js util/*.js",
         "lint:fix": "eslint --fix *.js actions/*.js reducers/*.js selectors/*.js util/*.js",
         "prettify": "prettier *.js actions/*.js reducers/*.js selectors/*.js util/*.js --write",
-        "test": "lint-staged"
+        "test": "jest --coverage"
     },
     "repository": {
         "type": "git",
@@ -24,6 +24,7 @@
     },
     "homepage": "https://github.com/Wappsto/wappsto-redux#readme",
     "dependencies": {
+        "react-dom": "^17.0.2",
         "deep-equal": "^2.0.5",
         "normalizr": "^3.6.1",
         "query-string": "^6.14.1",
@@ -32,13 +33,18 @@
         "reselect": "^4.1.5"
     },
     "devDependencies": {
+        "@babel/preset-env": "^7.16.11",
+        "@babel/preset-react": "^7.16.7",
         "@typescript-eslint/parser": "^5.10.1",
+        "babel-jest": "^27.4.6",
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-prettier": "^4.0.0",
         "husky": "^7.0.4",
+        "jest": "^27.4.7",
         "lint-staged": "^12.3.2",
         "prettier": "^2.5.1",
-        "react-scripts": "^5.0.0"
+        "react-scripts": "^5.0.0",
+        "react-test-renderer": "^17.0.2"
     },
     "eslintConfig": {
         "extends": [
