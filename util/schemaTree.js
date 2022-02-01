@@ -1,37 +1,45 @@
 let schemaTree = {
-  "user": {
-    "dependencies": []
+  user: {
+    dependencies: [],
   },
-  "state": {
-    "dependencies": []
+  state: {
+    dependencies: [],
   },
-  "value": {
-    "dependencies": [{
-      "key": "state",
-      "type": "many"
-    }]
+  value: {
+    dependencies: [
+      {
+        key: 'state',
+        type: 'many',
+      },
+    ],
   },
-  "device": {
-    "dependencies": [{
-      "key": "value",
-      "type": "many"
-    }]
+  device: {
+    dependencies: [
+      {
+        key: 'value',
+        type: 'many',
+      },
+    ],
   },
-  "network": {
-    "dependencies": [{
-      "key": "device",
-      "type": "many"
-    }]
+  network: {
+    dependencies: [
+      {
+        key: 'device',
+        type: 'many',
+      },
+    ],
   },
-  "permission": {
-    "dependencies": []
+  permission: {
+    dependencies: [],
   },
-  "acl": {
-    "dependencies": [{
-      "key": "permission",
-      "type": "many"
-    }]
-  }
+  acl: {
+    dependencies: [
+      {
+        key: 'permission',
+        type: 'many',
+      },
+    ],
+  },
 }
 
-export default schemaTree;
+export default schemaTree

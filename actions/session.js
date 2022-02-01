@@ -1,29 +1,29 @@
-export const ADD_SESSION = "ADD_SESSION";
-export const REMOVE_SESSION = "REMOVE_SESSION";
-export const INVALID_SESSION = "INVALID_SESSION";
-export const LIMIT_REACHED = "LIMIT_REACHED";
+export const ADD_SESSION = 'ADD_SESSION'
+export const REMOVE_SESSION = 'REMOVE_SESSION'
+export const INVALID_SESSION = 'INVALID_SESSION'
+export const LIMIT_REACHED = 'LIMIT_REACHED'
 
-export function addSession(data){
+export function addSession(data) {
   return {
     type: ADD_SESSION,
-    data
+    data,
   }
 }
 
-export function removeSession(){
+export function removeSession() {
   return {
-    type: REMOVE_SESSION
+    type: REMOVE_SESSION,
   }
 }
 
-export function invalidSession(){
+export function invalidSession() {
   return {
-    type: INVALID_SESSION
+    type: INVALID_SESSION,
   }
 }
 
-export function limitReached(){
+export function limitReached() {
   return {
-    type: LIMIT_REACHED
+    type: LIMIT_REACHED,
   }
 }
