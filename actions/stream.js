@@ -1,20 +1,20 @@
-import querystring from 'query-string';
+import querystring from 'query-string'
 
-import { _request } from './request';
+import { _request } from './request'
 
-import config from '../config';
-import { getUrlInfo, getServiceVersion } from '../util/helpers';
-import { addEntities, removeEntities } from './entities';
-import schemas from '../util/schemas';
+import config from '../config'
+import { getUrlInfo, getServiceVersion } from '../util/helpers'
+import { addEntities, removeEntities } from './entities'
+import schemas from '../util/schemas'
 
-export const UPDATE_STREAM = 'UPDATE_STREAM';
-export const REMOVE_STREAM = 'REMOVE_STREAM';
+export const UPDATE_STREAM = 'UPDATE_STREAM'
+export const REMOVE_STREAM = 'REMOVE_STREAM'
 
-const lostTimer = 1000 * 60;
-const retryTimer = 1000 * 5;
+const lostTimer = 1000 * 60
+const retryTimer = 1000 * 5
 
-let timeouts = {};
-let websockets = {};
+let timeouts = {}
+let websockets = {}
 
 //add also connection lost and timer of 5 minutes of waiting in general
 export const status = {
@@ -23,8 +23,8 @@ export const status = {
   CLOSED: 3,
   RECONNECTING: 4,
   ERROR: 5,
-  LOST: 6
-};
+  LOST: 6,
+}
 
 export const steps = {
   CONNECTING: {
@@ -32,298 +32,372 @@ export const steps = {
     CREATE_STREAM: 2,
     UPDATE_STREAM: 3,
     OPENING_SOCKET: 4,
-    WAITING: 5
-  }
+    WAITING: 5,
+  },
 }
 
-export function updateStream(name, status, step, ws, json, increment){
-  const obj = { type: UPDATE_STREAM };
-  if(ws !== undefined){
-    websockets[name] = ws;
-    obj.ws = ws;
+export function updateStream(name, status, step, ws, json, increment) {
+  const obj = { type: UPDATE_STREAM }
+  if (ws !== undefined) {
+    websockets[name] = ws
+    obj.ws = ws
   }
-  if(name !== undefined){
-    obj.name = name;
+  if (name !== undefined) {
+    obj.name = name
   }
-  if(status !== undefined){
-    obj.status = status;
+  if (status !== undefined) {
+    obj.status = status
   }
-  if(step !== undefined){
-    obj.step = step;
+  if (step !== undefined) {
+    obj.step = step
   }
-  if(json !== undefined){
-    obj.json = json;
+  if (json !== undefined) {
+    obj.json = json
   }
-  if(increment !== undefined){
-    obj.increment = increment;
+  if (increment !== undefined) {
+    obj.increment = increment
   }
-  return obj;
+  return obj
 }
 
-export function openStream(streamJSON = {}, session, options){
+export function openStream(streamJSON = {}, session, options) {
   return (dispatch, getState) => {
-    if(!streamJSON.name){
-      console.log("open stream requires a name to work");
-      return;
+    if (!streamJSON.name) {
+      console.log('open stream requires a name to work')
+      return
     }
-    if(!session){
-      session = getState().session && getState().session.meta.id;
+    if (!session) {
+      session = getState().session && getState().session.meta.id
     }
-    return _startStream(streamJSON, session, getState, dispatch, options);
-  };
+    return _startStream(streamJSON, session, getState, dispatch, options)
+  }
 }
 
-export function closeStream(name, silent = false){
+export function closeStream(name, silent = false) {
   return (dispatch, getState) => {
-    _clearStreamTimeouts({ name });
+    _clearStreamTimeouts({ name })
     if (websockets[name]) {
-      websockets[name].silent = silent;
-      websockets[name].stop = true;
-      websockets[name].close();
+      websockets[name].silent = silent
+      websockets[name].stop = true
+      websockets[name].close()
     }
-    dispatch(removeStream(name));
-  };
+    dispatch(removeStream(name))
+  }
 }
 
-function removeStream(name){
+function removeStream(name) {
   return {
     type: REMOVE_STREAM,
-    name
+    name,
   }
 }
 
-function _mergeStreams(oldJSON, newJSON){
-  let update = false;
-  if(newJSON.subscription){
+function _mergeStreams(oldJSON, newJSON) {
+  let update = false
+  if (newJSON.subscription) {
     newJSON.subscription.forEach((sub) => {
-      if(oldJSON.subscription.indexOf(sub) === -1){
-        update = true;
-        oldJSON.subscription.push(sub);
+      if (oldJSON.subscription.indexOf(sub) === -1) {
+        update = true
+        oldJSON.subscription.push(sub)
       }
-    });
+    })
   }
-  if(newJSON.ignore){
+  if (newJSON.ignore) {
     newJSON.ignore.forEach((sub) => {
-      if(oldJSON.ignore.indexOf(sub) === -1){
-        update = true;
-        oldJSON.ignore.push(sub);
+      if (oldJSON.ignore.indexOf(sub) === -1) {
+        update = true
+        oldJSON.ignore.push(sub)
       }
-    });
+    })
   }
-  if(oldJSON.full !== newJSON.full){
-    update = true;
-    oldJSON = newJSON.full;
+  if (oldJSON.full !== newJSON.full) {
+    update = true
+    oldJSON = newJSON.full
   }
-  return update ? oldJSON : undefined;
+  return update ? oldJSON : undefined
 }
 
 function getUrl(options = {}, isEndPoint) {
-  const service = (isEndPoint ? options.endPoint : options.service) || 'stream';
-  const version = options.hasOwnProperty('version') ? options.version : getServiceVersion(service);
-  return config.baseUrl + (version ? '/' + version : '') + '/' + service;
+  const service = (isEndPoint ? options.endPoint : options.service) || 'stream'
+  const version = options.hasOwnProperty('version')
+    ? options.version
+    : getServiceVersion(service)
+  return config.baseUrl + (version ? '/' + version : '') + '/' + service
 }
 
 async function _createStream(streamJSON, session, dispatch, options) {
-  dispatch(updateStream(streamJSON.name, status.CONNECTING, steps.CONNECTING.UPDATE_STREAM, null, streamJSON));
+  dispatch(
+    updateStream(
+      streamJSON.name,
+      status.CONNECTING,
+      steps.CONNECTING.UPDATE_STREAM,
+      null,
+      streamJSON
+    )
+  )
   let response = await _request({
     url: getUrl(options),
     method: 'POST',
     body: JSON.stringify(streamJSON),
-    headers : { 'x-session': session }
-  });
-  if(!response.ok){
-    throw response;
+    headers: { 'x-session': session },
+  })
+  if (!response.ok) {
+    throw response
   }
-  return response.json;
+  return response.json
 }
 
-function _addChildren(message, state){
-  const dataType = message.meta_object.type;
-  const data = message[dataType] || message.data;
-  const st = schemas.getSchemaTree(dataType);
-  if(st.dependencies){
-    const cachedData = state.entities[st.name] && state.entities[st.name][data.meta.id];
-    st.dependencies.forEach(({key, type}) => {
-      if(!data.hasOwnProperty(key)){
-        data[key] = cachedData ? cachedData[key] : ( type === 'many' ? [] : undefined );
+function _addChildren(message, state) {
+  const dataType = message.meta_object.type
+  const data = message[dataType] || message.data
+  const st = schemas.getSchemaTree(dataType)
+  if (st.dependencies) {
+    const cachedData = state.entities[st.name] && state.entities[st.name][data.meta.id]
+    st.dependencies.forEach(({ key, type }) => {
+      if (!data.hasOwnProperty(key)) {
+        data[key] = cachedData ? cachedData[key] : type === 'many' ? [] : undefined
       }
-    });
+    })
   }
 }
 
-function _clearStreamTimeouts(stream){
+function _clearStreamTimeouts(stream) {
   if (stream && stream.name && timeouts[stream.name]) {
-    clearTimeout(timeouts[stream.name].retryTimeout);
-    clearTimeout(timeouts[stream.name].lostTimeout);
-    delete timeouts[stream.name];
+    clearTimeout(timeouts[stream.name].retryTimeout)
+    clearTimeout(timeouts[stream.name].lostTimeout)
+    delete timeouts[stream.name]
   }
 }
 
-function _startStream(stream, session, getState, dispatch, options, reconnecting){
-  let url = getUrl(options, true);
-  if(stream.meta && stream.meta.id){
-    url += '/' + stream.meta.id + '?x-session=' + session;
+function _startStream(stream, session, getState, dispatch, options, reconnecting) {
+  let url = getUrl(options, true)
+  if (stream.meta && stream.meta.id) {
+    url += '/' + stream.meta.id + '?x-session=' + session
   } else {
-    const streamClone = { ...stream };
-    delete streamClone.name;
-    url += '/open?x-session=' + session + '&' + querystring.stringify(streamClone);
+    const streamClone = { ...stream }
+    delete streamClone.name
+    url += '/open?x-session=' + session + '&' + querystring.stringify(streamClone)
   }
-  if(window && window.location && window.location.origin && !url.startsWith('http')){
-    url = window.location.origin + url;
+  if (window && window.location && window.location.origin && !url.startsWith('http')) {
+    url = window.location.origin + url
   }
-  url = url.replace('http', 'ws');
-  let ws = new WebSocket(url);
+  url = url.replace('http', 'ws')
+  let ws = new WebSocket(url)
 
-  websockets[stream.name] = ws;
+  websockets[stream.name] = ws
 
-  dispatch(updateStream(stream.name, reconnecting ? status.RECONNECTING : status.CONNECTING, steps.CONNECTING.OPENING_SOCKET, ws, stream));
+  dispatch(
+    updateStream(
+      stream.name,
+      reconnecting ? status.RECONNECTING : status.CONNECTING,
+      steps.CONNECTING.OPENING_SOCKET,
+      ws,
+      stream
+    )
+  )
 
   ws.onopen = () => {
-    _clearStreamTimeouts(stream);
-    dispatch(updateStream(stream.name, status.OPEN, null, ws, stream));
-    console.log('Stream open: ' + url);
-  };
+    _clearStreamTimeouts(stream)
+    dispatch(updateStream(stream.name, status.OPEN, null, ws, stream))
+    console.log('Stream open: ' + url)
+  }
 
   ws.onmessage = (e) => {
     // a message was received
-    try{
-      let data = JSON.parse(e.data);
+    try {
+      let data = JSON.parse(e.data)
       if (data.constructor !== Array) {
-        data = [data];
+        data = [data]
       }
-      data.forEach(message => {
-        let state = getState();
-        switch(message.event){
+      data.forEach((message) => {
+        let state = getState()
+        switch (message.event) {
           case 'create':
             // since stream does not have child list, I'm going to add it from cached store state
-            _addChildren(message, state);
-            if(message.meta_object.type === 'state'){
-              const st = schemas.getSchemaTree('state');
-              if(state.entities[st.name] && state.entities[st.name].hasOwnProperty(message.meta_object.id)){
-                dispatch(addEntities(message.meta_object.type, message[message.meta_object.type]  || message.data, { reset: false }));
+            _addChildren(message, state)
+            if (message.meta_object.type === 'state') {
+              const st = schemas.getSchemaTree('state')
+              if (
+                state.entities[st.name] &&
+                state.entities[st.name].hasOwnProperty(message.meta_object.id)
+              ) {
+                dispatch(
+                  addEntities(
+                    message.meta_object.type,
+                    message[message.meta_object.type] || message.data,
+                    { reset: false }
+                  )
+                )
               } else {
-                let { parent } = getUrlInfo(message.path, 1);
-                dispatch(addEntities(message.meta_object.type, [message[message.meta_object.type] || message.data], { reset: false, parent }));
+                let { parent } = getUrlInfo(message.path, 1)
+                dispatch(
+                  addEntities(
+                    message.meta_object.type,
+                    [message[message.meta_object.type] || message.data],
+                    { reset: false, parent }
+                  )
+                )
               }
             } else {
-              let { parent } = getUrlInfo(message.path, 1);
-              dispatch(addEntities(message.meta_object.type, message[message.meta_object.type]  || message.data, { reset: false, parent }));
+              let { parent } = getUrlInfo(message.path, 1)
+              dispatch(
+                addEntities(
+                  message.meta_object.type,
+                  message[message.meta_object.type] || message.data,
+                  { reset: false, parent }
+                )
+              )
             }
-            break;
+            break
           case 'update':
             // since stream does not have child list, I'm going to add it from cached store state
-            _addChildren(message, state);
-            dispatch(addEntities(message.meta_object.type, message[message.meta_object.type] || message.data, { reset: false }));
-            break;
+            _addChildren(message, state)
+            dispatch(
+              addEntities(
+                message.meta_object.type,
+                message[message.meta_object.type] || message.data,
+                { reset: false }
+              )
+            )
+            break
           case 'delete':
-            let { parent } = getUrlInfo(message.path, 1);
-            dispatch(removeEntities(message.meta_object.type, [message.meta_object.id], { parent }));
-            break;
+            let { parent } = getUrlInfo(message.path, 1)
+            dispatch(
+              removeEntities(message.meta_object.type, [message.meta_object.id], {
+                parent,
+              })
+            )
+            break
           default:
-            break;
+            break
         }
       })
-    } catch(error){
-      console.log('stream catch', error);
+    } catch (error) {
+      console.log('stream catch', error)
     }
-  };
+  }
 
   ws.onerror = (e) => {
-    console.log('Stream error: ' + url, e.message);
-  };
+    console.log('Stream error: ' + url, e.message)
+  }
 
   ws.onclose = (e) => {
-    console.log('Stream close: ' + url, e.message);
-    if(!ws.stop && e.code !== 4001){
-      timeouts[stream.name] = {};
+    console.log('Stream close: ' + url, e.message)
+    if (!ws.stop && e.code !== 4001) {
+      timeouts[stream.name] = {}
       let retryTimeout = setTimeout(() => {
-        _startStream(stream, session, getState, dispatch, options, true);
-      }, retryTimer);
-      timeouts[stream.name].retryTimeout = retryTimeout;
-      if(!reconnecting){
+        _startStream(stream, session, getState, dispatch, options, true)
+      }, retryTimer)
+      timeouts[stream.name].retryTimeout = retryTimeout
+      if (!reconnecting) {
         let lostTimeout = setTimeout(() => {
-          _clearStreamTimeouts(stream);
-          if(!ws.silent){
-            dispatch(updateStream(stream.name, status.LOST, null, null, stream));
+          _clearStreamTimeouts(stream)
+          if (!ws.silent) {
+            dispatch(updateStream(stream.name, status.LOST, null, null, stream))
           }
           if (websockets[stream.name]) {
-            websockets[stream.name].stop = true;
-            websockets[stream.name].silent = true;
-            websockets[stream.name].close();
+            websockets[stream.name].stop = true
+            websockets[stream.name].silent = true
+            websockets[stream.name].close()
           }
-        }, lostTimer);
-        timeouts[stream.name].lostTimeout = lostTimeout;
+        }, lostTimer)
+        timeouts[stream.name].lostTimeout = lostTimeout
       }
-      if(!ws.silent){
-        dispatch(updateStream(stream.name, status.RECONNECTING, steps.CONNECTING.WAITING, ws, stream, true));
+      if (!ws.silent) {
+        dispatch(
+          updateStream(
+            stream.name,
+            status.RECONNECTING,
+            steps.CONNECTING.WAITING,
+            ws,
+            stream,
+            true
+          )
+        )
       }
     } else {
-      if(!ws.silent){
-        dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, stream));
+      if (!ws.silent) {
+        dispatch(updateStream(stream.name, status.CLOSED, e.code, ws, stream))
       }
     }
-  };
+  }
 
-  return ws;
+  return ws
 }
 
-export function initializeStream(streamJSON = {}, session, options){
+export function initializeStream(streamJSON = {}, session, options) {
   return async (dispatch, getState) => {
-    if(!_request){
-      console.log('request function is not set');
-      return;
+    if (!_request) {
+      console.log('request function is not set')
+      return
     }
-    if(!session){
-      session = getState().session && getState().session.meta.id;
+    if (!session) {
+      session = getState().session && getState().session.meta.id
     }
-    if(!session){
+    if (!session) {
       // dispatch no session maybe ?
-      console.log('no session specified');
-      return;
+      console.log('no session specified')
+      return
     }
-    try{
-      const streamBaseUrl = getUrl(options);
-      dispatch(updateStream(streamJSON.name, status.CONNECTING, steps.CONNECTING.GET_STREAM, null, streamJSON));
-      let headers = { 'x-session': session };
-      let url = streamBaseUrl + '?expand=0';
-      if(streamJSON.name){
+    try {
+      const streamBaseUrl = getUrl(options)
+      dispatch(
+        updateStream(
+          streamJSON.name,
+          status.CONNECTING,
+          steps.CONNECTING.GET_STREAM,
+          null,
+          streamJSON
+        )
+      )
+      let headers = { 'x-session': session }
+      let url = streamBaseUrl + '?expand=0'
+      if (streamJSON.name) {
         url += '&this_name=' + streamJSON.name
       }
-      let response = await _request({ method: 'GET',  url, headers });
-      if(!response.ok){
-        response.url = url;
-        throw response;
+      let response = await _request({ method: 'GET', url, headers })
+      if (!response.ok) {
+        response.url = url
+        throw response
       }
-      let json = response.json;
+      let json = response.json
       if (json.length > 0) {
         if (!streamJSON.hasOwnProperty('full')) {
-            streamJSON.full = true;
+          streamJSON.full = true
         }
-        let stream = json[0];
+        let stream = json[0]
 
         // merging with json
-        let newJSON = _mergeStreams(stream, streamJSON);
+        let newJSON = _mergeStreams(stream, streamJSON)
 
-        if(newJSON){
-          dispatch(updateStream(streamJSON.name, status.CONNECTING, steps.CONNECTING.UPDATE_STREAM, null, newJSON));
+        if (newJSON) {
+          dispatch(
+            updateStream(
+              streamJSON.name,
+              status.CONNECTING,
+              steps.CONNECTING.UPDATE_STREAM,
+              null,
+              newJSON
+            )
+          )
           let updateResponse = await _request({
             url: streamBaseUrl + '/' + stream.meta.id,
             method: 'PATCH',
             body: JSON.stringify(newJSON),
-            headers
-          });
-          if(!updateResponse.ok){
-            throw updateResponse;
+            headers,
+          })
+          if (!updateResponse.ok) {
+            throw updateResponse
           }
         }
-        return _startStream(newJSON || stream, session, getState, dispatch, options);
+        return _startStream(newJSON || stream, session, getState, dispatch, options)
       } else {
-        let stream = await _createStream(streamJSON, session, dispatch, options);
-        return _startStream(stream, session, getState, dispatch, options);
+        let stream = await _createStream(streamJSON, session, dispatch, options)
+        return _startStream(stream, session, getState, dispatch, options)
       }
-    } catch(e) {
-      console.log("initializeStream error", e);
-      dispatch(updateStream(streamJSON.name, status.ERROR, null, null, streamJSON));
+    } catch (e) {
+      console.log('initializeStream error', e)
+      dispatch(updateStream(streamJSON.name, status.ERROR, null, null, streamJSON))
     }
-  };
+  }
 }

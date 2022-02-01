@@ -1,7 +1,7 @@
-import config from './config';
-export { default as configureStore } from './configureStore';
-export { overrideRequest } from './actions/request';
+import config from './config'
+export { default as configureStore } from './configureStore'
+export { overrideRequest } from './actions/request'
 
-export function use(newConfig){
-  Object.assign(config, newConfig);
+export function use(newConfig) {
+  Object.assign(config, newConfig)
 }

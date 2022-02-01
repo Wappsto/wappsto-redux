@@ -1,3 +1,3 @@
 export default {
-  baseUrl: "/services"
+  baseUrl: '/services',
 }
