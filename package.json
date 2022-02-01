@@ -21,11 +21,11 @@
   },
   "homepage": "https://github.com/Wappsto/wappsto-redux#readme",
   "dependencies": {
-    "deep-equal": "^2.0.3",
-    "normalizr": "^3.4.1",
-    "query-string": "^6.13.1",
-    "redux": "^4.0.4",
-    "redux-thunk": "^2.3.0",
+    "deep-equal": "^2.0.5",
+    "normalizr": "^3.6.1",
+    "query-string": "^6.14.1",
+    "redux": "^4.1.2",
+    "redux-thunk": "^2.4.1",
     "reselect": "^4.1.5"
   }
 }
