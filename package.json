@@ -23,7 +23,7 @@
   "dependencies": {
     "normalizr": "^3.6.1",
     "deep-equal": "^2.0.5",
-    "query-string": "^6.13.1",
+    "query-string": "^6.14.1",
     "redux": "^4.0.4",
     "redux-thunk": "^2.3.0",
     "reselect": "^4.0.0"
