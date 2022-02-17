@@ -3,7 +3,8 @@
         "browser": true,
         "es2021": true,
         "es6": true,
-        "node": true
+        "node": true,
+        "jest/globals": true
     },
     "extends": [
         "eslint:recommended",
@@ -21,7 +22,8 @@
     "plugins": [
         "react",
         "react-hooks",
-        "prettier"
+        "prettier",
+        "jest"
     ],
     "rules": {
       "no-const-assign": "warn",
