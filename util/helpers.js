@@ -6,10 +6,12 @@ const rex = new RegExp('^' + UUIDRegex + '$', 'i')
 
 export function isUUID(data) {
   try {
-    if (data.match(rex).length > 0) {
+    if (data?.match(rex).length > 0) {
       return true
     }
-  } catch (err) {}
+  } catch (err) {
+    console.error(`Failed to test ${data} for uuid`, err)
+  }
   return false
 }
 

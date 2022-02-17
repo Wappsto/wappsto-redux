@@ -3,22 +3,26 @@ import reducerRegistry from '../util/reducerRegistry'
 
 const initialState = {}
 
+function reconnect(state, action) {
+  state = Object.assign({}, state)
+  let count = (state[action.name] && state[action.name].count) || 0
+  if (action.increment) {
+    count++
+  }
+  state[action.name] = {
+    ...(state[action.name] || {}),
+    ...action,
+    count,
+  }
+  delete state[action.name].type
+}
+
 export default function reducer(state = initialState, action) {
   switch (action.type) {
     case UPDATE_STREAM:
       switch (action.status) {
         case status.RECONNECTING:
-          state = Object.assign({}, state)
-          let count = (state[action.name] && state[action.name].count) || 0
-          if (action.increment) {
-            count++
-          }
-          state[action.name] = {
-            ...(state[action.name] || {}),
-            ...action,
-            count,
-          }
-          delete state[action.name].type
+          reconnect(state, action)
           break
         default:
           state = Object.assign({}, state)

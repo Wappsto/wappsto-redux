@@ -74,7 +74,7 @@ export function openStream(streamJSON = {}, session, options) {
 }
 
 export function closeStream(name, silent = false) {
-  return (dispatch, getState) => {
+  return (dispatch) => {
     _clearStreamTimeouts({ name })
     if (websockets[name]) {
       websockets[name].silent = silent
@@ -211,6 +211,7 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
       }
       data.forEach((message) => {
         let state = getState()
+        let parent
         switch (message.event) {
           case 'create':
             // since stream does not have child list, I'm going to add it from cached store state
@@ -261,7 +262,7 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
             )
             break
           case 'delete':
-            let { parent } = getUrlInfo(message.path, 1)
+            parent = getUrlInfo(message.path, 1).parent
             dispatch(
               removeEntities(message.meta_object.type, [message.meta_object.id], {
                 parent,

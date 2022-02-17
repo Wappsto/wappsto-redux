@@ -2,7 +2,7 @@ import { schema } from 'normalizr'
 import schemaTree from './schemaTree'
 
 const options = {
-  idAttribute: (value, parent, key) => {
+  idAttribute: (value) => {
     return value.meta.id
   },
 }

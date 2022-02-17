@@ -156,6 +156,8 @@ function requestError(
 }
 
 function dispatchEntitiesAction(dispatch, method, url, json, options, service, parent) {
+  let deleted
+
   switch (method) {
     case 'GET':
       dispatch(addEntities(service, json, { reset: false, ...options, parent }))
@@ -166,7 +168,7 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
       dispatch(addEntities(service, json, { ...options, parent, reset: false }))
       break
     case 'DELETE':
-      const deleted = [
+      deleted = [
         ...(json.deleted || []),
         ...(json.shared_deleted || []),
         ...(json.owned_deleted || []),

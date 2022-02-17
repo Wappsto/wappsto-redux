@@ -133,10 +133,11 @@ function removeEntity(state, type, id) {
 }
 
 export default function reducer(state = initialState, action) {
-  let newData
+  let newData, data
+
   switch (action.type) {
     case ADD_ENTITIES:
-      let data = parse(action.data)
+      data = parse(action.data)
       state = Object.assign({}, state)
       if (data.constructor === Object) {
         data = [data]

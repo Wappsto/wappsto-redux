@@ -4,9 +4,10 @@ import reducerRegistry from '../util/reducerRegistry'
 const initialState = {}
 
 export default function reducer(state = initialState, action) {
+  let data
+
   switch (action.type) {
     case ADD_ITEM:
-      let data
       if (action.data && action.data.constructor === Function) {
         data = action.data(state[action.name])
       } else {
