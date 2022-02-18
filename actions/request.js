@@ -178,6 +178,7 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
       }
       break
     default:
+    /* istanbul ignore next */
       break
   }
 }
@@ -255,7 +256,7 @@ export function startRequest(dispatch, options, session) {
   let promise, pendingId
   const { url, id } = options
   const data = options.data || options.body
-  const method = options.method.toUpperCase()
+  const method = options.method?.toUpperCase() || 'GET'
   const result = splitUrlAndOptions(url, options)
   const requestOptions = getOptions(method, url, data, options, session)
   if (id) {
@@ -343,8 +344,9 @@ export function startRequest(dispatch, options, session) {
 
 export function makeRequest(options = {}) {
   return (dispatch, getState) => {
+    /* istanbul ignore next */
     if (!_request) {
-      console.log('request function is not set')
+      console.error('_request function is not set')
       return
     }
     const state = getState()
