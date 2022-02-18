@@ -178,7 +178,7 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
       }
       break
     default:
-    /* istanbul ignore next */
+      /* istanbul ignore next */
       break
   }
 }

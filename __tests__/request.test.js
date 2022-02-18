@@ -2,6 +2,7 @@ import fetchMock from 'jest-fetch-mock'
 import configureStore from '../configureStore'
 import { makeRequestSelector } from '../selectors/request'
 import {
+  _request,
   makeRequest,
   removeRequest,
   overrideRequest,
@@ -115,7 +116,7 @@ describe('request', () => {
         },
       })
     )
-    expect(req.json).toEqual({ deleted: [ '93c47415-0e68-4d5f-9c58-c1fe32322037' ] })
+    expect(req.json).toEqual({ deleted: ['93c47415-0e68-4d5f-9c58-c1fe32322037'] })
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
@@ -227,7 +228,7 @@ describe('request', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
     expect(req.id).toEqual(id)
     expect(req.status).toEqual('error')
-    expect(req.json).toEqual({"code": 117000000})
+    expect(req.json).toEqual({ code: 117000000 })
     expect(req.body).toEqual(undefined)
   })
 
@@ -246,32 +247,24 @@ describe('request', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
     expect(req.id).toEqual(id)
     expect(req.status).toEqual('error')
-    expect(req.json).toEqual({"code": 300098})
+    expect(req.json).toEqual({ code: 300098 })
     expect(req.body).toEqual(undefined)
   })
 
-  it('can override the request method', async () => {
-    let fun = jest.fn(() => new Promise((resolve) => {
-      return {};
-    }));
-    overrideRequest(fun)
-
-    store.dispatch(
-      makeRequest({
-        url: '/test',
-      })
-    )
-
-    expect(fun).toHaveBeenCalledTimes(1)
-  })
-
   it('can clear all requests', async () => {
+    fetch
+      .mockResponseOnce(() => {
+        return new Promise((r) => setTimeout(r, 1))
+      })
+      .mockResponseOnce(() => {
+        return new Promise((r) => setTimeout(r, 1))
+      })
     store.dispatch(
       makeRequest({
         id: '1',
         method: 'POST',
         url: '/test',
-        body: {}
+        body: {},
       })
     )
     store.dispatch(
@@ -279,12 +272,42 @@ describe('request', () => {
         id: '2',
         method: 'PUT',
         url: '/test2',
-        body: {}
+        body: {},
       })
     )
 
-    expect(store.getState().request).not.toEqual({})
+    let req1 = getRequest(store.getState(), '1')
+    let req2 = getRequest(store.getState(), '2')
+    expect(req1.status).toEqual('pending')
+    expect(req2.status).toEqual('pending')
+
     cancelAllRequests()
-    expect(store.getState().request).toEqual({})
+
+    await new Promise((r) => setTimeout(r, 1))
+
+    req1 = getRequest(store.getState(), '1')
+    req2 = getRequest(store.getState(), '2')
+
+    expect(req1.status).toEqual('error')
+    expect(req2.status).toEqual('error')
+  })
+
+  it('can override the request method', async () => {
+    let fun = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolve()
+        })
+    )
+    overrideRequest(fun)
+
+    await store.dispatch(
+      makeRequest({
+        url: '/test',
+      })
+    )
+    overrideRequest(_request)
+
+    expect(fun).toHaveBeenCalledTimes(1)
   })
 })
