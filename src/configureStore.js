@@ -7,7 +7,7 @@ import { trigger } from './events'
 import thunk from 'redux-thunk'
 import reducerRegistry from './util/reducerRegistry'
 
-export default function configureStore(initialState = {}) {
+export function configureStore(initialState = {}) {
   // Preserve initial state for not-yet-loaded reducers
   const combine = (reducers) => {
     const reducerNames = Object.keys(reducers)

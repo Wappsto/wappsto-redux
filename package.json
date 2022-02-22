@@ -2,12 +2,14 @@
     "name": "wappsto-redux",
     "version": "3.5.7",
     "description": "",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
-        "lint": "eslint *.js actions/*.js reducers/*.js selectors/*.js util/*.js __tests__/*.js __tests__/**/*.js",
+        "build": "babel src -d dist",
+        "lint": "eslint src",
         "lint:fix": "yarn lint --fix",
-        "prettify": "prettier *.js actions/*.js reducers/*.js selectors/*.js util/*.js __tests__/*.js __tests__/**/*.js --write",
-        "test": "jest --coverage"
+        "prettify": "prettier src --write",
+        "test": "jest --coverage",
+        "prepublish": "yarn build"
     },
     "repository": {
         "type": "git",
@@ -32,12 +34,14 @@
         "deep-equal": "^2.0.5",
         "normalizr": "^3.6.1",
         "query-string": "^6.14.1",
-        "react-dom": "^17.0.2",
+        "react": "^17.0.2",
         "redux": "^4.1.2",
         "redux-thunk": "^2.4.1",
         "reselect": "^4.1.5"
     },
     "devDependencies": {
+        "@babel/cli": "^7.17.3",
+        "@babel/core": "^7.17.5",
         "@babel/preset-env": "^7.16.11",
         "@babel/preset-react": "^7.16.7",
         "@typescript-eslint/parser": "^5.10.1",

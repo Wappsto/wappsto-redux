@@ -1,4 +1,4 @@
-import { onLogout, trigger } from '../events'
+import { onLogout, trigger } from '../src'
 
 describe('events', () => {
   it('trigger an logout event', () => {

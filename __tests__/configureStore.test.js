@@ -1,4 +1,4 @@
-import configureStore from '../configureStore'
+import { configureStore } from '../src'
 
 describe('configureStore', () => {
   it('can create a new store', () => {

@@ -1,3 +1,6 @@
 module.exports = {
-  presets: ['@babel/preset-env', '@babel/preset-react'],
+    assumptions: {
+        setSpreadProperties: true
+    },
+    presets: ['@babel/preset-env', '@babel/preset-react'],
 }

@@ -1,14 +1,14 @@
 import fetchMock from 'jest-fetch-mock'
-import configureStore from '../configureStore'
-import { makeRequestSelector } from '../selectors/request'
 import {
+  configureStore,
+  makeRequestSelector,
+  addSession,
   _request,
   makeRequest,
   removeRequest,
   overrideRequest,
   cancelAllRequests,
-} from '../actions/request'
-import { addSession } from '../actions/session'
+} from '../src'
 
 describe('request', () => {
   fetchMock.enableMocks()
