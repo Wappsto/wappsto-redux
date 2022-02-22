@@ -30,6 +30,9 @@
             "pre-commit": "yarn lint && yarn test"
         }
     },
+    "engines": {
+        "node": ">=16"
+    },
     "dependencies": {
         "deep-equal": "^2.0.5",
         "normalizr": "^3.6.1",
