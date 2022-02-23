@@ -1,71 +1,19 @@
 {
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "es6": true,
-        "node": true,
-        "jest/globals": true
-    },
-    "extends": [
-        "eslint:recommended",
-        "plugin:react/recommended",
-        "plugin:prettier/recommended"
-    ],
     "parserOptions": {
-        "ecmaFeatures": {
-            "jsx": true,
-            "experimentalObjectRestSpread": true
-        },
-        "ecmaVersion": 12,
-        "sourceType": "module"
-    },
-    "plugins": [
-        "react",
-        "react-hooks",
-        "prettier",
-        "jest"
-    ],
-    "rules": {
-      "no-const-assign": "warn",
-      "no-this-before-super": "warn",
-      "no-undef": "error",
-      "no-unreachable": "warn",
-      "no-unused-vars": "warn",
-      "constructor-super": "warn",
-      "valid-typeof": "warn",
-      "no-extra-semi": "error",
-      "no-trailing-spaces": "error",
-      "react-hooks/rules-of-hooks": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      "react/no-unescaped-entities": "warn",
-      "react/display-name": "off",
-      "react/prop-types": "off",
-      "no-prototype-builtins": "off",
-      "prettier/prettier": "warn"
-    },
-    "settings": {
-      "react": {
-        "createClass": "createReactClass",
-        "pragma": "React",
-        "version": "detect",
-        "flowVersion": "0.53"
-      },
-      "propWrapperFunctions": [
-        "forbidExtraProps",
-        {
-          "property": "freeze",
-          "object": "Object"
-        },
-        {
-          "property": "myFavoriteWrapper"
-        }
-      ],
-      "linkComponents": [
-        "Hyperlink",
-        {
-          "name": "Link",
-          "linkAttribute": "to"
-        }
-      ]
+    "sourceType": "module",
+    "allowImportExportEverywhere": false,
+    "codeFrame": false
+  },
+  "extends": ["airbnb", "prettier"],
+  "env": {
+      "browser": true,
+      "jest": true
+  },
+  "rules": {
+      "max-len": ["error", {"code": 100}],
+      "prefer-promise-reject-errors": ["off"],
+      "react/jsx-filename-extension": ["off"],
+      "react/prop-types": ["warn"],
+      "no-return-assign": ["off"]
     }
 }

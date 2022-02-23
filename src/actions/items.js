@@ -5,13 +5,13 @@ export function setItem(name, data) {
   return {
     type: ADD_ITEM,
     name,
-    data
+    data,
   };
 }
 
 export function removeItem(name) {
   return {
     type: REMOVE_ITEM,
-    name
+    name,
   };
 }

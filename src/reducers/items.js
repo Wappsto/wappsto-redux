@@ -1,10 +1,10 @@
 import { ADD_ITEM, REMOVE_ITEM } from '../actions/items';
-import reducerRegistry from '../util/reducerRegistry';
 
 const initialState = {};
 
-export default function reducer(state = initialState, action) {
+function reducer(state = initialState, action = {}) {
   let data;
+  let newState;
 
   switch (action.type) {
     case ADD_ITEM:
@@ -13,16 +13,14 @@ export default function reducer(state = initialState, action) {
       } else {
         data = action.data;
       }
-      return Object.assign({}, state, {
-        [action.name]: data
-      });
+      return { ...state, [action.name]: data };
     case REMOVE_ITEM:
-      state = Object.assign({}, state);
-      delete state[action.name];
-      return state;
+      newState = { ...state };
+      delete newState[action.name];
+      return newState;
     default:
       return state;
   }
 }
 
-reducerRegistry.register('items', reducer);
+export default reducer;

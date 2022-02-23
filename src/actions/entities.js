@@ -6,7 +6,7 @@ export function addEntities(service, data, options = {}) {
     type: ADD_ENTITIES,
     service,
     data,
-    options
+    options,
   };
 }
 
@@ -15,6 +15,6 @@ export function removeEntities(service, ids, options = {}) {
     type: REMOVE_ENTITIES,
     service,
     ids,
-    options
+    options,
   };
 }

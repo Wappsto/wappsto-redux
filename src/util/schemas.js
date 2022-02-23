@@ -2,41 +2,39 @@ import { schema } from 'normalizr';
 import schemaTree from './schemaTree';
 
 const options = {
-  idAttribute: (value) => {
-    return value.meta.id;
-  }
+  idAttribute: (value) => value.meta.id,
 };
 
-let schemas = {};
+const schemas = {};
 
-for (let entity in schemaTree) {
-  let definition = {};
-  if (!schemaTree[entity].name) {
-    schemaTree[entity].name = entity;
+Object.keys(schemaTree).forEach((key) => {
+  const definition = {};
+  if (!schemaTree[key].name) {
+    schemaTree[key].name = key;
   }
-  schemaTree[entity].dependencies.forEach((dep) => {
+  schemaTree[key].dependencies.forEach((dep) => {
     definition[dep.key] = dep.type === 'many' ? [schemas[dep.key]] : schemas[dep.key];
   });
-  schemas[entity] = new schema.Entity(schemaTree[entity].name, definition, options);
-}
+  schemas[key] = new schema.Entity(schemaTree[key].name, definition, options);
+});
 
 schemas.generateGenericSchema = (name) => {
   schemaTree[name] = {
-    name: name,
-    dependencies: []
+    name,
+    dependencies: [],
   };
   schemas[name] = new schema.Entity(name, {}, options);
 };
 
 schemas.getSchema = (type) => {
-  if (!schemas.hasOwnProperty(type)) {
+  if (!Object.prototype.hasOwnProperty.call(schemas, type)) {
     schemas.generateGenericSchema(type);
   }
   return schemas[type];
 };
 
 schemas.getSchemaTree = (type) => {
-  if (!schemas.hasOwnProperty(type)) {
+  if (!Object.prototype.hasOwnProperty.call(schemas, type)) {
     schemas.generateGenericSchema(type);
   }
   return schemaTree[type];

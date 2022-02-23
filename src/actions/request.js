@@ -4,7 +4,7 @@ import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
 import { invalidSession, limitReached } from './session';
-import 'core-js/stable';
+// import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
 export const REQUEST_PENDING = 'REQUEST_PENDING';
@@ -15,25 +15,25 @@ export const REMOVE_REQUEST = 'REMOVE_REQUEST';
 export const STATUS = {
   pending: 'pending',
   success: 'success',
-  error: 'error'
+  error: 'error',
 };
 
 const pendingRequestsCache = {};
 let nextPendingId = 0;
 
 function getQueryObj(query) {
-  var urlParams = {};
-  var match,
-    pl = /\+/g,
-    search = /([^&=]+)=?([^&]*)/g,
-    decode = function (s) {
-      return decodeURIComponent(s.replace(pl, ' '));
-    };
+  const urlParams = {};
+  const pl = /\+/g;
+  const search = /([^&=]+)=?([^&]*)/g;
+  const decode = function decode(s) {
+    return decodeURIComponent(s.replace(pl, ' '));
+  };
 
-  while ((match = search.exec(query))) {
+  let match = search.exec(query);
+  while (match) {
     const left = decode(match[1]);
     const right = decode(match[2]);
-    if (urlParams.hasOwnProperty(left)) {
+    if (Object.prototype.hasOwnProperty.call(urlParams, left)) {
       if (urlParams[left].constructor !== Array) {
         urlParams[left] = [urlParams[left]];
       }
@@ -41,35 +41,36 @@ function getQueryObj(query) {
     } else {
       urlParams[left] = right;
     }
+    match = search.exec(query);
   }
 
   return urlParams;
 }
 
 function splitUrlAndOptions(url, options) {
-  let newOptions = { ...options };
-  let split = url.split('?');
+  const newOptions = { ...options };
+  const split = url.split('?');
   if (split[1]) {
-    let query = split.slice(1).join('?');
+    const query = split.slice(1).join('?');
     if (!newOptions.query) {
       newOptions.query = getQueryObj(query);
     } else {
       newOptions.query = {
         ...newOptions.query,
-        ...getQueryObj(query)
+        ...getQueryObj(query),
       };
     }
   }
   return {
     url: split[0],
-    options: newOptions
+    options: newOptions,
   };
 }
 
 function getUrlWithQuery(url, options) {
   const { service } = getUrlInfo(url);
   const version = options.version || getServiceVersion(service);
-  let result = config.baseUrl + (version ? '/' + version : '') + url;
+  let result = config.baseUrl + (version ? `/${version}` : '') + url;
   if (options.query && Object.keys(options.query).length > 0) {
     result += result.indexOf('?') === -1 ? '?' : '&';
     result += querystring.stringify(options.query);
@@ -78,10 +79,10 @@ function getUrlWithQuery(url, options) {
 }
 
 function getOptions(method, url, data, options, sessionJSON) {
-  let requestOptions = {
+  const requestOptions = {
     method,
     headers: options.headers || {},
-    rawOptions: { ...options }
+    rawOptions: { ...options },
   };
   if (sessionJSON && sessionJSON.meta && !requestOptions.headers['x-session']) {
     requestOptions.headers['x-session'] = sessionJSON.meta.id;
@@ -101,7 +102,7 @@ function requestPending(id, method, url, body, options, promise) {
     url,
     body,
     options,
-    promise
+    promise,
   };
 }
 
@@ -116,7 +117,7 @@ function requestSuccess(id, method, url, body, responseStatus, json, text, optio
     json,
     text,
     options,
-    promise
+    promise,
   };
 }
 
@@ -131,7 +132,7 @@ function requestError(id, method, url, body, responseStatus, json, text, options
     json,
     text,
     options,
-    promise
+    promise,
   };
 }
 
@@ -151,7 +152,7 @@ function dispatchEntitiesAction(dispatch, method, url, json, options, service, p
       deleted = [
         ...(json.deleted || []),
         ...(json.shared_deleted || []),
-        ...(json.owned_deleted || [])
+        ...(json.owned_deleted || []),
       ];
       if (deleted.length > 0) {
         dispatch(removeEntities(service, deleted, { ...options, parent, reset: false }));
@@ -172,16 +173,19 @@ function dispatchMethodAction(dispatch, method, url, json, options) {
   }
 }
 
-export let _request = async (options) => {
+let localRequest = async (options) => {
   try {
+    // eslint-disable-next-line no-param-reassign
     options.headers = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      ...options.headers
+      ...options.headers,
     };
     if (!options.controller || !options.controller.signal) {
+      // eslint-disable-next-line no-param-reassign
       options.controller = new AbortController();
     }
+    // eslint-disable-next-line no-param-reassign
     options.signal = options.controller.signal;
     const response = await fetch(options.url, options);
     try {
@@ -191,7 +195,7 @@ export let _request = async (options) => {
         ok: response.ok,
         status: response.status,
         json,
-        options
+        options,
       };
     } catch (e) {
       const text = await response.clone().text();
@@ -200,7 +204,7 @@ export let _request = async (options) => {
         status: response.status,
         text,
         options,
-        rawResponse: response
+        rawResponse: response,
       };
     }
   } catch (e) {
@@ -208,15 +212,18 @@ export let _request = async (options) => {
   }
 };
 
+export const request = async (options) => localRequest(options);
+
 function findRequest(url, method, data, options = {}) {
-  for (let id in pendingRequestsCache) {
+  for (let i = 0; i < Object.keys(pendingRequestsCache).length; i += 1) {
+    const id = Object.keys(pendingRequestsCache)[i];
     const pendingRequest = pendingRequestsCache[id];
     const rUrl = querystring.parseUrl(pendingRequest.url);
     const parsedUrl = querystring.parseUrl(url);
     const rQuery = {
       ...pendingRequest.query,
       ...rUrl.query,
-      ...(pendingRequest.options.query || {})
+      ...(pendingRequest.options.query || {}),
     };
     const query = options.query ? { ...options.query, ...parsedUrl.query } : parsedUrl.query;
     if (
@@ -228,20 +235,22 @@ function findRequest(url, method, data, options = {}) {
       return pendingRequest.promise;
     }
   }
+  return undefined;
 }
 
 export function startRequest(dispatch, options, session) {
-  let promise, pendingId;
+  let promise;
+  let pendingId;
   const { url, id } = options;
   const data = options.data || options.body;
-  const method = options.method?.toUpperCase() || 'GET';
+  const method = options.method ? options.method.toUpperCase() : 'GET';
   const result = splitUrlAndOptions(url, options);
   const requestOptions = getOptions(method, url, data, options, session);
   if (id) {
     pendingId = id;
   } else {
     pendingId = nextPendingId;
-    nextPendingId++;
+    nextPendingId += 1;
   }
 
   const checkResponse = (response) => {
@@ -253,7 +262,7 @@ export function startRequest(dispatch, options, session) {
           requestOptions.method,
           result.url,
           response.json,
-          result.options
+          result.options,
         );
       }
       if (id) {
@@ -267,8 +276,8 @@ export function startRequest(dispatch, options, session) {
             response.json,
             response.text,
             result.options,
-            promise
-          )
+            promise,
+          ),
         );
       }
     } else {
@@ -290,8 +299,8 @@ export function startRequest(dispatch, options, session) {
             response.json,
             response.text,
             result.options,
-            promise
-          )
+            promise,
+          ),
         );
       }
     }
@@ -300,7 +309,7 @@ export function startRequest(dispatch, options, session) {
 
   promise = findRequest(url, method, data, options);
   if (!promise) {
-    promise = _request(requestOptions);
+    promise = localRequest(requestOptions);
   }
   promise.then(checkResponse).catch(checkResponse);
 
@@ -311,7 +320,7 @@ export function startRequest(dispatch, options, session) {
     result.url,
     data,
     result.options,
-    promise
+    promise,
   );
   pendingRequestsCache[pendingId] = requestPendingObj;
   if (id) {
@@ -322,11 +331,6 @@ export function startRequest(dispatch, options, session) {
 
 export function makeRequest(options = {}) {
   return (dispatch, getState) => {
-    /* istanbul ignore next */
-    if (!_request) {
-      console.error('_request function is not set');
-      return;
-    }
     const state = getState();
     const promise = startRequest(dispatch, options, state.session);
     return promise;
@@ -336,18 +340,20 @@ export function makeRequest(options = {}) {
 export function removeRequest(id) {
   return {
     type: REMOVE_REQUEST,
-    id
+    id,
   };
 }
 
 export function overrideRequest(func) {
-  _request = func;
+  if (func) {
+    localRequest = func;
+  }
 }
 
 export function cancelAllRequests() {
-  for (let key in pendingRequestsCache) {
+  Object.keys(pendingRequestsCache).forEach((key) => {
     if (pendingRequestsCache[key].options.abortable !== false) {
       pendingRequestsCache[key].options.controller.abort();
     }
-  }
+  });
 }

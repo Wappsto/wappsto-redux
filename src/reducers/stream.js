@@ -1,46 +1,48 @@
-import { UPDATE_STREAM, REMOVE_STREAM, status } from '../actions/stream';
-import reducerRegistry from '../util/reducerRegistry';
+import { UPDATE_STREAM, REMOVE_STREAM, streamStatus } from '../actions/stream';
 
 const initialState = {};
 
 function reconnect(state, action) {
-  state = Object.assign({}, state);
-  let count = (state[action.name] && state[action.name].count) || 0;
+  const newState = { ...state };
+  let count = (newState[action.name] && newState[action.name].count) || 0;
   if (action.increment) {
-    count++;
+    count += 1;
   }
-  state[action.name] = {
-    ...(state[action.name] || {}),
+  newState[action.name] = {
+    ...(newState[action.name] || {}),
     ...action,
-    count
+    count,
   };
-  delete state[action.name].type;
+  delete newState[action.name].type;
+  return newState;
 }
 
-export default function reducer(state = initialState, action) {
+function reducer(state = initialState, action = {}) {
+  let newState;
+
   switch (action.type) {
     case UPDATE_STREAM:
       switch (action.status) {
-        case status.RECONNECTING:
-          reconnect(state, action);
+        case streamStatus.RECONNECTING:
+          newState = reconnect(state, action);
           break;
         default:
-          state = Object.assign({}, state);
-          state[action.name] = {
-            ...(state[action.name] || {}),
-            ...action
+          newState = { ...state };
+          newState[action.name] = {
+            ...(newState[action.name] || {}),
+            ...action,
           };
-          delete state[action.name].type;
+          delete newState[action.name].type;
           break;
       }
-      return state;
+      return newState;
     case REMOVE_STREAM:
-      state = Object.assign({}, state);
-      delete state[action.name];
-      return state;
+      newState = { ...state };
+      delete newState[action.name];
+      return newState;
     default:
       return state;
   }
 }
 
-reducerRegistry.register('stream', reducer);
+export default reducer;
