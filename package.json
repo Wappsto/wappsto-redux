@@ -2,7 +2,9 @@
     "name": "wappsto-redux",
     "version": "3.5.7",
     "description": "",
-    "files": ["dist"],
+    "files": [
+        "dist"
+    ],
     "main": "dist/index.js",
     "scripts": {
         "build": "babel src -d dist",
