@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: ['14.x', '16.x']
+        node: ['16.x', '17.x']
         os: [ubuntu-latest]
 
     steps:
@@ -22,11 +22,14 @@ jobs:
       - name: Install deps and build (with cache)
         uses: bahmutov/npm-install@v1
 
+      - name: Build
+        run: yarn build
+
       - name: Lint
         run: yarn lint
 
       - name: Test
-        run: yarn test --ci --coverage --maxWorkers=2
+        run: yarn test --ci --maxWorkers=2
 
       - name: Codecov
         uses: codecov/codecov-action@v2.1.0

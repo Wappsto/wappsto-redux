@@ -1,11 +1,11 @@
-import configureStore from '../configureStore'
-import { getSession } from '../selectors/session'
 import {
+  configureStore,
+  getSession,
   addSession,
   removeSession,
   invalidSession,
   limitReached,
-} from '../actions/session'
+} from '../src'
 
 describe('session', () => {
   let store
