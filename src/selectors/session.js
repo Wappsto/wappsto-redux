@@ -1,1 +1,1 @@
-export const getSession = (state) => state.session
+export const getSession = (state) => state.session;

@@ -1,5 +1,5 @@
 let config = {
-  baseUrl: '/services',
-}
+  baseUrl: '/services'
+};
 
-export default config
+export default config;

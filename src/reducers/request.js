@@ -3,14 +3,14 @@ import {
   REQUEST_ERROR,
   REQUEST_SUCCESS,
   REMOVE_REQUEST,
-  STATUS,
-} from '../actions/request'
-import reducerRegistry from '../util/reducerRegistry'
+  STATUS
+} from '../actions/request';
+import reducerRegistry from '../util/reducerRegistry';
 
-const initialState = {}
+const initialState = {};
 
 function getActionState(action, state, status) {
-  let { method, url, json, text, options, id, responseStatus, body, promise } = action
+  let { method, url, json, text, options, id, responseStatus, body, promise } = action;
   return Object.assign({}, state, {
     [id]: {
       id,
@@ -22,32 +22,32 @@ function getActionState(action, state, status) {
       text,
       responseStatus,
       options,
-      promise,
-    },
-  })
+      promise
+    }
+  });
 }
 
 export default function reducer(state = initialState, action) {
   switch (action.type) {
     case REQUEST_PENDING:
-      return getActionState(action, state, STATUS.pending)
+      return getActionState(action, state, STATUS.pending);
     case REQUEST_SUCCESS:
       if (state[action.id]) {
-        return getActionState(action, state, STATUS.success)
+        return getActionState(action, state, STATUS.success);
       }
-      return state
+      return state;
     case REQUEST_ERROR:
       if (state[action.id]) {
-        return getActionState(action, state, STATUS.error)
+        return getActionState(action, state, STATUS.error);
       }
-      return state
+      return state;
     case REMOVE_REQUEST:
-      state = Object.assign({}, state)
-      delete state[action.id]
-      return state
+      state = Object.assign({}, state);
+      delete state[action.id];
+      return state;
     default:
-      return state
+      return state;
   }
 }
 
-reducerRegistry.register('request', reducer)
+reducerRegistry.register('request', reducer);

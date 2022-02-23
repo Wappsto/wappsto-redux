@@ -1,13 +1,13 @@
-export const ADD_ENTITIES = 'ADD_ENTITIES'
-export const REMOVE_ENTITIES = 'REMOVE_ENTITIES'
+export const ADD_ENTITIES = 'ADD_ENTITIES';
+export const REMOVE_ENTITIES = 'REMOVE_ENTITIES';
 
 export function addEntities(service, data, options = {}) {
   return {
     type: ADD_ENTITIES,
     service,
     data,
-    options,
-  }
+    options
+  };
 }
 
 export function removeEntities(service, ids, options = {}) {
@@ -15,6 +15,6 @@ export function removeEntities(service, ids, options = {}) {
     type: REMOVE_ENTITIES,
     service,
     ids,
-    options,
-  }
+    options
+  };
 }

@@ -61,13 +61,6 @@
         "react-scripts": "^5.0.0",
         "react-test-renderer": "^17.0.2"
     },
-    "prettier": {
-        "printWidth": 90,
-        "bracketSpacing": true,
-        "trailingComma": "es5",
-        "semi": false,
-        "singleQuote": true
-    },
     "lint-staged": {
         "*.js": "npm run lint:fix"
     }
