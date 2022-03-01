@@ -8,9 +8,9 @@
     "main": "dist/index.js",
     "scripts": {
         "build": "babel src -d dist",
-        "lint": "eslint src",
+        "lint": "eslint src __tests__",
         "lint:fix": "yarn lint --fix",
-        "prettify": "prettier src --write",
+        "prettify": "prettier src __tests__ --write",
         "test": "jest --coverage",
         "prepublish": "yarn build"
     },

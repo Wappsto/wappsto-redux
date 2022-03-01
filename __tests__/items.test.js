@@ -43,7 +43,7 @@ describe('items', () => {
 
   it('can get an item with the selector', async () => {
     await store.dispatch(setItem('key', 'test'));
-    let item = getItemSelector(store.getState(), 'key');
+    const item = getItemSelector(store.getState(), 'key');
 
     expect(item).toEqual('test');
   });

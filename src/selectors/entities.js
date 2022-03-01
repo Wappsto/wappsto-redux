@@ -201,7 +201,7 @@ export const makeEntitiesSelector = () => {
         } else if (filters) {
           result = [];
           filters.forEach((filter) => {
-            lookIn.forEach((key) => {
+            Object.keys(lookIn).forEach((key) => {
               const val = lookIn[key];
               if (matchObject(val, filter) && !result.includes(val)) {
                 result.push(val);

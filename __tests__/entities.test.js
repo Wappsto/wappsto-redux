@@ -17,18 +17,18 @@ describe('entities', () => {
   });
 
   it('can get an empty entity', () => {
-    let item = getEntity(store.getState(), 'key');
+    const item = getEntity(store.getState(), 'key');
     expect(item).toBe(undefined);
   });
 
   it('can add and remove entities', async () => {
-    let add = await store.dispatch(
+    const add = await store.dispatch(
       addEntities('network', { meta: { type: 'network', id: 'network_id' }, name: 'network' })
     );
-    let item = getEntity(store.getState(), 'network', 'network_id');
+    const item = getEntity(store.getState(), 'network', 'network_id');
 
-    let rem = store.dispatch(removeEntities('network', 'network_id'));
-    let item2 = getEntity(store.getState(), 'network', 'network_id');
+    const rem = await store.dispatch(removeEntities('network', 'network_id'));
+    const item2 = getEntity(store.getState(), 'network', 'network_id');
 
     expect(add.type).toEqual('ADD_ENTITIES');
     expect(add.service).toEqual('network');
@@ -43,18 +43,18 @@ describe('entities', () => {
   });
 
   it('can get user data', async () => {
-    let noUser = getUserData(store.getState());
+    const noUser = getUserData(store.getState());
     await store.dispatch(
       addEntities('user', { meta: { type: 'user', id: 'user_id' }, name: 'User' })
     );
-    let user = getUserData(store.getState());
+    const user = getUserData(store.getState());
 
     expect(noUser).toBe(undefined);
     expect(user.name).toEqual('User');
   });
 
   it('can get multiple enties', async () => {
-    let noItems = getEntities(store.getState());
+    const noItems = getEntities(store.getState());
     await store.dispatch(
       addEntities('network', {
         meta: { type: 'network', id: 'network_id' },
@@ -78,7 +78,7 @@ describe('entities', () => {
       })
     );
 
-    let items = getEntities(store.getState(), 'device', [
+    const items = getEntities(store.getState(), 'device', [
       'device_id_1',
       'device_id_2',
       'device_id_3'
@@ -153,7 +153,7 @@ describe('entities', () => {
     expect(device.length).toBe(1);
     expect(device[0].name).toEqual('New Device Name 2');
 */
-    let devices = getEntities(store.getState(), 'device', {
+    const devices = getEntities(store.getState(), 'device', {
       filter: [{ name: 'New Device Name 2' }, { name: 'Device Name 3' }]
     });
 

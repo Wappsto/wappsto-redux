@@ -21,7 +21,7 @@ describe('request', () => {
   });
 
   it('can make a request', async () => {
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         dispatchEntities: false,
         method: 'PATCH',
@@ -42,7 +42,7 @@ describe('request', () => {
   });
 
   it('can make a request with query', async () => {
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         method: 'GET',
         url: '/test?q1=q2',
@@ -56,7 +56,7 @@ describe('request', () => {
   });
 
   it('can make a request with query in option', async () => {
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         method: 'GET',
         query: { q1: 'q2' },
@@ -71,7 +71,7 @@ describe('request', () => {
   });
 
   it('can make a request with query array', async () => {
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         method: 'PUT',
         url: '/test?q1=q2&q1=q3',
@@ -92,7 +92,7 @@ describe('request', () => {
         }
       })
     );
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         method: 'PUT',
         url: '/test?q1=q2&q1=q3',
@@ -107,7 +107,7 @@ describe('request', () => {
 
   it('can make a DELETE request', async () => {
     fetch.mockResponseOnce('{"deleted": ["93c47415-0e68-4d5f-9c58-c1fe32322037"]}');
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         method: 'DELETE',
         url: '/test',
@@ -122,7 +122,7 @@ describe('request', () => {
 
   it('can make a File request', async () => {
     fetch.mockResponseOnce('File data');
-    let req = await store.dispatch(
+    const req = await store.dispatch(
       makeRequest({
         method: 'GET',
         url: '/file/93c47415-0e68-4d5f-9c58-c1fe32322037/document',
@@ -138,13 +138,13 @@ describe('request', () => {
 
   it('will not fire the same request multiple times', async () => {
     fetch.mockResponseOnce('File data');
-    let req1 = store.dispatch(
+    const req1 = store.dispatch(
       makeRequest({
         method: 'GET',
         url: '/test'
       })
     );
-    let req2 = store.dispatch(
+    const req2 = store.dispatch(
       makeRequest({
         method: 'GET',
         url: '/test'
@@ -156,14 +156,14 @@ describe('request', () => {
   });
 
   it('can get a request', async () => {
-    let id = 'id1';
+    const id = 'id1';
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id: id
+        id
       })
     );
-    let req = getRequest(store.getState(), id);
+    const req = getRequest(store.getState(), id);
 
     expect(req.id).toEqual(id);
     expect(req.method).toEqual('GET');
@@ -172,17 +172,17 @@ describe('request', () => {
   });
 
   it('can remove a request', async () => {
-    let id = 'id1';
-    store.dispatch(
+    const id = 'id1';
+    await store.dispatch(
       makeRequest({
         url: '/test',
-        id: id
+        id
       })
     );
-    let req1 = getRequest(store.getState(), id);
-    store.dispatch(removeRequest(id));
+    const req1 = getRequest(store.getState(), id);
+    await store.dispatch(removeRequest(id));
 
-    let req2 = getRequest(store.getState(), id);
+    const req2 = getRequest(store.getState(), id);
     expect(req1).not.toBe(undefined);
     expect(req2).toBe(undefined);
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -190,15 +190,15 @@ describe('request', () => {
 
   it('can handle an error', async () => {
     fetch.mockRejectOnce(() => Promise.reject({}));
-    let id = 'id1';
+    const id = 'id1';
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id: id
+        id
       })
     );
 
-    let req = getRequest(store.getState(), id);
+    const req = getRequest(store.getState(), id);
     expect(req.id).toEqual(id);
     expect(req.status).toEqual('error');
     expect(req.json).toEqual(undefined);
@@ -215,15 +215,15 @@ describe('request', () => {
       })
     );
     fetch.mockResponseOnce('{"code": 117000000}', { status: 400 });
-    let id = 'id1';
+    const id = 'id1';
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id: id
+        id
       })
     );
 
-    let req = getRequest(store.getState(), id);
+    const req = getRequest(store.getState(), id);
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(req.id).toEqual(id);
@@ -234,15 +234,15 @@ describe('request', () => {
 
   it('can handle an limit reached error', async () => {
     fetch.mockResponseOnce('{"code": 300098}', { status: 400 });
-    let id = 'id1';
+    const id = 'id1';
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id: id
+        id
       })
     );
 
-    let req = getRequest(store.getState(), id);
+    const req = getRequest(store.getState(), id);
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(req.id).toEqual(id);
@@ -253,12 +253,8 @@ describe('request', () => {
 
   it('can clear all requests', async () => {
     fetch
-      .mockResponseOnce(() => {
-        return new Promise((r) => setTimeout(r, 1));
-      })
-      .mockResponseOnce(() => {
-        return new Promise((r) => setTimeout(r, 1));
-      });
+      .mockResponseOnce(() => new Promise((r) => setTimeout(r, 1)))
+      .mockResponseOnce(() => new Promise((r) => setTimeout(r, 1)));
     store.dispatch(
       makeRequest({
         id: '1',
@@ -293,7 +289,7 @@ describe('request', () => {
   });
 
   it('can override the request method', async () => {
-    let fun = jest.fn(
+    const fun = jest.fn(
       () =>
         new Promise((resolve) => {
           resolve();
