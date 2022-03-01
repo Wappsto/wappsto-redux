@@ -1,7 +1,5 @@
 import querystring from 'query-string';
 
-import { request } from './request';
-
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
@@ -87,8 +85,8 @@ export function closeStream(name, silent = false) {
   };
 }
 
-function mergeStreams(oldJSON, newJSON) {
-  let result = oldJSON;
+/*
+function _mergeStreams(oldJSON, newJSON) {
   let update = false;
   if (newJSON.subscription) {
     newJSON.subscription.forEach((sub) => {
@@ -112,6 +110,7 @@ function mergeStreams(oldJSON, newJSON) {
   }
   return update ? result : undefined;
 }
+*/
 
 function getUrl(options = {}, isEndPoint = false) {
   const service = (isEndPoint ? options.endPoint : options.service) || 'stream';
@@ -121,7 +120,8 @@ function getUrl(options = {}, isEndPoint = false) {
   return `${config.baseUrl + (version ? `/${version}` : '')}/${service}`;
 }
 
-async function createStream(streamJSON, session, dispatch, options) {
+/*
+async function _createStream(streamJSON, session, dispatch, options) {
   dispatch(
     updateStream(
       streamJSON.name,
@@ -142,12 +142,13 @@ async function createStream(streamJSON, session, dispatch, options) {
   }
   return response.json;
 }
+*/
 
 function addChildren(message, state) {
   const dataType = message.meta_object.type;
   const data = message[dataType] || message.data;
   const st = schemas.getSchemaTree(dataType);
-  if (st.dependencies) {
+  if (data && st.dependencies) {
     const cachedData = state.entities[st.name] && state.entities[st.name][data.meta.id];
     st.dependencies.forEach(({ key, type }) => {
       if (!Object.prototype.hasOwnProperty.call(data, key)) {
@@ -203,6 +204,10 @@ function startStream(stream, session, getState, dispatch, options, reconnecting)
         data = [data];
       }
       data.forEach((message) => {
+        if (!message || !message.meta_object) {
+          return;
+        }
+
         const state = getState();
         let parent;
         switch (message.event) {
@@ -315,12 +320,12 @@ function startStream(stream, session, getState, dispatch, options, reconnecting)
   return ws;
 }
 
-export function openStream(streamJSON, session, options) {
-  return (dispatch, getState) => {
-    let newSession = session;
+export function openStream(streamJSON = {}, session = undefined, options = {}) {
+  return async (dispatch, getState) => {
     if (!streamJSON || !streamJSON.name) {
-      throw new Error('openStream requires a name to work');
+      throw new TypeError('openStream requires a name to work');
     }
+    let newSession = session;
     if (!newSession) {
       newSession = getState().session && getState().session.meta.id;
     }
@@ -328,6 +333,7 @@ export function openStream(streamJSON, session, options) {
   };
 }
 
+/*
 export function initializeStream(streamJSON = {}, session = undefined, options = undefined) {
   return async (dispatch, getState) => {
     let newSession = session;
@@ -400,3 +406,4 @@ export function initializeStream(streamJSON = {}, session = undefined, options =
     return undefined;
   };
 }
+*/

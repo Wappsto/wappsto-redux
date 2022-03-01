@@ -23,7 +23,7 @@ function addEntity(state, type, data) {
   Object.keys(newData.entities).forEach((key) => {
     newState[key] = { ...newState[key], ...newData.entities[key] };
   });
-  return { newState, result: newData.result };
+  return { state: newState, result: newData.result };
 }
 
 function addEntities(state, type, data) {
@@ -32,19 +32,23 @@ function addEntities(state, type, data) {
   Object.keys(newData.entities).forEach((key) => {
     newState[key] = { ...newState[key], ...newData.entities[key] };
   });
-  return { newState, result: newData.result };
+  return { state: newState, result: newData.result };
 }
 
 function removeEntities(state, type, ids = []) {
+  let newIds = ids;
+  if (typeof ids === 'string') {
+    newIds = [ids];
+  }
   let newState = { ...state };
-  ids.forEach((id) => {
+  newIds.forEach((id) => {
     // eslint-disable-next-line no-use-before-define
     const newData = removeEntity(newState, type, id);
     newState = newData.state;
   });
   const def = schemas.getSchemaTree(type);
   newState[def.name] = { ...newState[def.name] };
-  return { newState, result: [] };
+  return { state: newState, result: [] };
 }
 
 function removeAllEntities(state, type) {
@@ -55,7 +59,7 @@ function removeAllEntities(state, type) {
     const newData = removeEntities(newState, type, Object.keys(entities));
     newState = newData.state;
   }
-  return { newState, result: [] };
+  return { state: newState, result: [] };
 }
 
 function addChildEntities(state, type, id, child, data, reset = true) {
@@ -95,7 +99,7 @@ function addChildEntities(state, type, id, child, data, reset = true) {
     }
   }
   newState = newData.state;
-  return { newState, result };
+  return { state: newState, result };
 }
 
 function removeEntity(state, type, id) {
@@ -110,7 +114,7 @@ function removeEntity(state, type, id) {
     });
     delete newState[def.name][id];
   }
-  return { newState };
+  return { state: newState };
 }
 
 function removeChildEntities(state, type, id, child, ids) {
@@ -137,7 +141,7 @@ function removeChildEntities(state, type, id, child, ids) {
     newElement[child] = result;
     newState[def.name][id] = newElement;
   }
-  return { newState, result };
+  return { state: newState, result };
 }
 
 function reducer(state = initialState, action = {}) {
