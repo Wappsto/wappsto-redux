@@ -27,7 +27,11 @@ function addEntities(state, type, data) {
 }
 
 function removeEntities(state, type, ids = []) {
-  ids.forEach((id) => {
+  let newIds = ids;
+  if (typeof ids === 'string') {
+    newIds = [ids];
+  }
+  newIds.forEach((id) => {
     let newData = removeEntity(state, type, id);
     state = newData.state;
   });

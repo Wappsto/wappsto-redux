@@ -1,6 +1,6 @@
 import querystring from 'query-string';
 
-import { _request } from './request';
+//import { _request } from './request';
 
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
@@ -92,6 +92,7 @@ function removeStream(name) {
   };
 }
 
+/*
 function _mergeStreams(oldJSON, newJSON) {
   let update = false;
   if (newJSON.subscription) {
@@ -116,6 +117,7 @@ function _mergeStreams(oldJSON, newJSON) {
   }
   return update ? oldJSON : undefined;
 }
+*/
 
 function getUrl(options = {}, isEndPoint) {
   const service = (isEndPoint ? options.endPoint : options.service) || 'stream';
@@ -123,6 +125,7 @@ function getUrl(options = {}, isEndPoint) {
   return config.baseUrl + (version ? '/' + version : '') + '/' + service;
 }
 
+/*
 async function _createStream(streamJSON, session, dispatch, options) {
   dispatch(
     updateStream(
@@ -144,12 +147,13 @@ async function _createStream(streamJSON, session, dispatch, options) {
   }
   return response.json;
 }
+*/
 
 function _addChildren(message, state) {
   const dataType = message.meta_object.type;
   const data = message[dataType] || message.data;
   const st = schemas.getSchemaTree(dataType);
-  if (st.dependencies) {
+  if (data && st.dependencies) {
     const cachedData = state.entities[st.name] && state.entities[st.name][data.meta.id];
     st.dependencies.forEach(({ key, type }) => {
       if (!data.hasOwnProperty(key)) {
@@ -208,6 +212,10 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
         data = [data];
       }
       data.forEach((message) => {
+        if (!message || !message.meta_object) {
+          return;
+        }
+
         let state = getState();
         let parent;
         switch (message.event) {
@@ -267,11 +275,10 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
               })
             );
             break;
-          default:
-            break;
         }
       });
     } catch (error) {
+      /* istanbul ignore next */
       console.log('stream catch', error);
     }
   };
@@ -317,6 +324,7 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
   return ws;
 }
 
+/*
 export function initializeStream(streamJSON = {}, session, options) {
   return async (dispatch, getState) => {
     if (!_request) {
@@ -393,3 +401,4 @@ export function initializeStream(streamJSON = {}, session, options) {
     }
   };
 }
+*/
