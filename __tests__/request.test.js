@@ -7,7 +7,7 @@ import {
   makeRequest,
   removeRequest,
   overrideRequest,
-  cancelAllRequests
+  cancelAllRequests,
 } from '../src';
 
 describe('request', () => {
@@ -27,9 +27,9 @@ describe('request', () => {
         method: 'PATCH',
         url: '/test',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
     expect(req.ok).toBe(true);
     expect(req.status).toBe(200);
@@ -47,9 +47,9 @@ describe('request', () => {
         method: 'GET',
         url: '/test?q1=q2',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
     expect(req.options.url).toEqual('/services/test?q1=q2');
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -62,9 +62,9 @@ describe('request', () => {
         query: { q1: 'q2' },
         url: '/test?q3=q4',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
     expect(req.options.url).toEqual('/services/test?q3=q4&q1=q2');
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -76,9 +76,9 @@ describe('request', () => {
         method: 'PUT',
         url: '/test?q1=q2&q1=q3',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
     expect(req.options.url).toEqual('/services/test?q1=q2&q1=q3');
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -88,18 +88,18 @@ describe('request', () => {
     await store.dispatch(
       addSession({
         meta: {
-          id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02'
-        }
-      })
+          id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02',
+        },
+      }),
     );
     const req = await store.dispatch(
       makeRequest({
         method: 'PUT',
         url: '/test?q1=q2&q1=q3',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
     expect(req.options.url).toEqual('/services/test?q1=q2&q1=q3');
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -112,9 +112,9 @@ describe('request', () => {
         method: 'DELETE',
         url: '/test',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
     expect(req.json).toEqual({ deleted: ['93c47415-0e68-4d5f-9c58-c1fe32322037'] });
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -127,9 +127,9 @@ describe('request', () => {
         method: 'GET',
         url: '/file/93c47415-0e68-4d5f-9c58-c1fe32322037/document',
         body: {
-          test: 'test'
-        }
-      })
+          test: 'test',
+        },
+      }),
     );
 
     expect(req.text).toEqual('File data');
@@ -141,14 +141,14 @@ describe('request', () => {
     const req1 = store.dispatch(
       makeRequest({
         method: 'GET',
-        url: '/test'
-      })
+        url: '/test',
+      }),
     );
     const req2 = store.dispatch(
       makeRequest({
         method: 'GET',
-        url: '/test'
-      })
+        url: '/test',
+      }),
     );
 
     expect(req1).toBe(req2);
@@ -160,8 +160,8 @@ describe('request', () => {
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id
-      })
+        id,
+      }),
     );
     const req = getRequest(store.getState(), id);
 
@@ -176,8 +176,8 @@ describe('request', () => {
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id
-      })
+        id,
+      }),
     );
     const req1 = getRequest(store.getState(), id);
     await store.dispatch(removeRequest(id));
@@ -194,8 +194,8 @@ describe('request', () => {
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id
-      })
+        id,
+      }),
     );
 
     const req = getRequest(store.getState(), id);
@@ -210,17 +210,17 @@ describe('request', () => {
     await store.dispatch(
       addSession({
         meta: {
-          id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02'
-        }
-      })
+          id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02',
+        },
+      }),
     );
     fetch.mockResponseOnce('{"code": 117000000}', { status: 400 });
     const id = 'id1';
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id
-      })
+        id,
+      }),
     );
 
     const req = getRequest(store.getState(), id);
@@ -238,8 +238,8 @@ describe('request', () => {
     await store.dispatch(
       makeRequest({
         url: '/test',
-        id
-      })
+        id,
+      }),
     );
 
     const req = getRequest(store.getState(), id);
@@ -253,27 +253,33 @@ describe('request', () => {
 
   it('can clear all requests', async () => {
     fetch
-      .mockResponseOnce(() => new Promise((r) => {
-        setTimeout(r, 1)
-      }))
-      .mockResponseOnce(() => new Promise((r) => {
-        setTimeout(r, 1)
-      }));
+      .mockResponseOnce(
+        () =>
+          new Promise((r) => {
+            setTimeout(r, 1);
+          }),
+      )
+      .mockResponseOnce(
+        () =>
+          new Promise((r) => {
+            setTimeout(r, 1);
+          }),
+      );
     store.dispatch(
       makeRequest({
         id: '1',
         method: 'POST',
         url: '/test',
-        body: {}
-      })
+        body: {},
+      }),
     );
     store.dispatch(
       makeRequest({
         id: '2',
         method: 'PUT',
         url: '/test2',
-        body: {}
-      })
+        body: {},
+      }),
     );
 
     let req1 = getRequest(store.getState(), '1');
@@ -284,7 +290,7 @@ describe('request', () => {
     cancelAllRequests();
 
     await new Promise((r) => {
-      setTimeout(r, 1)
+      setTimeout(r, 1);
     });
 
     req1 = getRequest(store.getState(), '1');
@@ -299,14 +305,14 @@ describe('request', () => {
       () =>
         new Promise((resolve) => {
           resolve();
-        })
+        }),
     );
     overrideRequest(fun);
 
     await store.dispatch(
       makeRequest({
-        url: '/test'
-      })
+        url: '/test',
+      }),
     );
     overrideRequest(_request);
 

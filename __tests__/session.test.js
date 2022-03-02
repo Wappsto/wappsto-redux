@@ -4,15 +4,15 @@ import {
   addSession,
   removeSession,
   invalidSession,
-  limitReached
+  limitReached,
 } from '../src';
 
 describe('session', () => {
   let store;
   const jsonSession = {
     meta: {
-      id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02'
-    }
+      id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02',
+    },
   };
 
   beforeEach(() => {

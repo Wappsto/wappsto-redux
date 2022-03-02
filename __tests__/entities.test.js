@@ -4,7 +4,7 @@ import {
   makeEntitiesSelector,
   getUserData,
   addEntities,
-  removeEntities
+  removeEntities,
 } from '../src';
 
 describe('entities', () => {
@@ -23,7 +23,7 @@ describe('entities', () => {
 
   it('can add and remove entities', async () => {
     const add = await store.dispatch(
-      addEntities('network', { meta: { type: 'network', id: 'network_id' }, name: 'network' })
+      addEntities('network', { meta: { type: 'network', id: 'network_id' }, name: 'network' }),
     );
     const item = getEntity(store.getState(), 'network', 'network_id');
 
@@ -45,7 +45,7 @@ describe('entities', () => {
   it('can get user data', async () => {
     const noUser = getUserData(store.getState());
     await store.dispatch(
-      addEntities('user', { meta: { type: 'user', id: 'user_id' }, name: 'User' })
+      addEntities('user', { meta: { type: 'user', id: 'user_id' }, name: 'User' }),
     );
     const user = getUserData(store.getState());
 
@@ -63,25 +63,25 @@ describe('entities', () => {
           {
             meta: {
               type: 'device',
-              id: 'device_id_1'
+              id: 'device_id_1',
             },
-            name: 'Device Name 1'
+            name: 'Device Name 1',
           },
           {
             meta: {
               type: 'device',
-              id: 'device_id_2'
+              id: 'device_id_2',
             },
-            name: 'Device Name 2'
-          }
-        ]
-      })
+            name: 'Device Name 2',
+          },
+        ],
+      }),
     );
 
     const items = getEntities(store.getState(), 'device', [
       'device_id_1',
       'device_id_2',
-      'device_id_3'
+      'device_id_3',
     ]);
 
     expect(noItems).toEqual([]);
@@ -99,19 +99,19 @@ describe('entities', () => {
           {
             meta: {
               type: 'device',
-              id: 'device_id_1'
+              id: 'device_id_1',
             },
-            name: 'Device Name 1'
+            name: 'Device Name 1',
           },
           {
             meta: {
               type: 'device',
-              id: 'device_id_2'
+              id: 'device_id_2',
             },
-            name: 'Device Name 2'
-          }
-        ]
-      })
+            name: 'Device Name 2',
+          },
+        ],
+      }),
     );
     await store.dispatch(
       addEntities('network', {
@@ -121,22 +121,22 @@ describe('entities', () => {
           {
             meta: {
               type: 'device',
-              id: 'device_id_2'
+              id: 'device_id_2',
             },
-            name: 'New Device Name 2'
+            name: 'New Device Name 2',
           },
           {
             meta: {
               type: 'device',
-              id: 'device_id_3'
+              id: 'device_id_3',
             },
-            name: 'Device Name 3'
-          }
-        ]
-      })
+            name: 'Device Name 3',
+          },
+        ],
+      }),
     );
     let device = getEntities(store.getState(), 'device', {
-      filter: { name: 'New Device Name 2' }
+      filter: { name: 'New Device Name 2' },
     });
     expect(device.length).toBe(1);
     expect(device[0].name).toEqual('New Device Name 2');
@@ -155,7 +155,7 @@ describe('entities', () => {
     expect(device[0].name).toEqual('New Device Name 2');
 */
     const devices = getEntities(store.getState(), 'device', {
-      filter: [{ name: 'New Device Name 2' }, { name: 'Device Name 3' }]
+      filter: [{ name: 'New Device Name 2' }, { name: 'Device Name 3' }],
     });
 
     expect(devices.length).toBe(2);

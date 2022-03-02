@@ -34,7 +34,7 @@ describe('items', () => {
     await store.dispatch(
       setItem('key', (data) => {
         fun(data);
-      })
+      }),
     );
 
     expect(fun).toHaveBeenCalledTimes(1);

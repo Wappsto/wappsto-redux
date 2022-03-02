@@ -7,7 +7,7 @@ describe('configureStore', () => {
   });
 
   it('can create a new store with parameters', () => {
-    const cs = configureStore({ items: { 'test': true } });
+    const cs = configureStore({ items: { test: true } });
     expect(cs.getState().items.test).toBe(true);
   });
 });

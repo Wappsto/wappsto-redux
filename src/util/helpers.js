@@ -11,7 +11,7 @@ export function getUrlInfo(url, skip = 0) {
   let service = '';
   let parent = '';
   let id = '';
-  if(url) {
+  if (url) {
     let split = url.split('?')[0];
     split = split.replace(/(.?services)?(.?\d+\.\d+)?/, '').split('/');
     if ((split.length - skip) % 2 !== 0) {

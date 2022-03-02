@@ -10,7 +10,7 @@ import {
   closeStream,
   setStreamLostTime,
   setStreamRetryTime,
-  streamStatus
+  streamStatus,
 } from '../src';
 
 describe('stream', () => {
@@ -33,10 +33,17 @@ describe('stream', () => {
   });
 
   it('can open and close a stream', async () => {
-    const ws = await store.dispatch(openStream({
-      name: 'main',
-      subscription: [],
-      full: true }, null, {}));
+    const ws = await store.dispatch(
+      openStream(
+        {
+          name: 'main',
+          subscription: [],
+          full: true,
+        },
+        null,
+        {},
+      ),
+    );
 
     await server.connected;
 
@@ -72,15 +79,15 @@ describe('stream', () => {
     server.send({
       event: 'create',
       meta_object: {
-        type: 'network'
+        type: 'network',
       },
       network: {
         meta: {
           type: 'network',
-          id: 'network_id'
+          id: 'network_id',
         },
-        name: 'network name'
-      }
+        name: 'network name',
+      },
     });
 
     const n = getEntity(store.getState(), 'network', 'network_id');
@@ -112,61 +119,61 @@ describe('stream', () => {
     server.send({
       event: 'create',
       meta_object: {
-        type: 'network'
+        type: 'network',
       },
       network: {
         meta: {
           type: 'network',
-          id: 'network_id'
+          id: 'network_id',
         },
-        name: 'network name'
-      }
+        name: 'network name',
+      },
     });
 
     server.send({
       event: 'create',
       meta_object: {
-        type: 'device'
+        type: 'device',
       },
       path: '/network/network_id/device',
       device: {
         meta: {
           type: 'device',
-          id: 'device_id'
+          id: 'device_id',
         },
-        name: 'device name'
-      }
+        name: 'device name',
+      },
     });
 
     server.send({
       event: 'create',
       meta_object: {
-        type: 'value'
+        type: 'value',
       },
       path: '/network/network_id/device/device_id/value',
       value: {
         meta: {
           type: 'value',
-          id: 'value_id'
+          id: 'value_id',
         },
-        name: 'value name'
-      }
+        name: 'value name',
+      },
     });
 
     server.send({
       event: 'create',
       meta_object: {
-        type: 'state'
+        type: 'state',
       },
       path: '/network/network_id/device/device_id/value/value_id/state',
       data: {
         meta: {
           type: 'state',
-          id: 'state_id'
+          id: 'state_id',
         },
         type: 'Report',
-        data: '1'
-      }
+        data: '1',
+      },
     });
 
     await new Promise((r) => {
@@ -186,17 +193,17 @@ describe('stream', () => {
     server.send({
       event: 'update',
       meta_object: {
-        type: 'state'
+        type: 'state',
       },
       path: '/network/network_id/device/device_id/value/value_id/state/state_id',
       data: {
         meta: {
           type: 'state',
-          id: 'state_id'
+          id: 'state_id',
         },
         type: 'Report',
-        data: '2'
-      }
+        data: '2',
+      },
     });
 
     await new Promise((r) => {
@@ -209,17 +216,17 @@ describe('stream', () => {
       event: 'delete',
       meta_object: {
         id: 'state_id',
-        type: 'state'
+        type: 'state',
       },
       path: '/network/network_id/device/device_id/value/value_id/state/state_id',
       data: {
         meta: {
           type: 'state',
-          id: 'state_id'
+          id: 'state_id',
         },
         type: 'Report',
-        data: '2'
-      }
+        data: '2',
+      },
     });
 
     await new Promise((r) => {
