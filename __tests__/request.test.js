@@ -253,8 +253,12 @@ describe('request', () => {
 
   it('can clear all requests', async () => {
     fetch
-      .mockResponseOnce(() => new Promise((r) => setTimeout(r, 1)))
-      .mockResponseOnce(() => new Promise((r) => setTimeout(r, 1)));
+      .mockResponseOnce(() => new Promise((r) => {
+        setTimeout(r, 1)
+      }))
+      .mockResponseOnce(() => new Promise((r) => {
+        setTimeout(r, 1)
+      }));
     store.dispatch(
       makeRequest({
         id: '1',
@@ -279,7 +283,9 @@ describe('request', () => {
 
     cancelAllRequests();
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1)
+    });
 
     req1 = getRequest(store.getState(), '1');
     req2 = getRequest(store.getState(), '2');

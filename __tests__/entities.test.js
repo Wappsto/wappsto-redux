@@ -149,7 +149,8 @@ describe('entities', () => {
     expect(device.length).toBe(1);
     expect(device[0].name).toEqual('New Device Name 2');
     /*
-    device = getEntities(store.getState(), 'device', {parent: {device:['device_id_2'], filter: ['device_id_2']}});
+    device = getEntities(store.getState(),
+    'device', {parent: {device:['device_id_2'], filter: ['device_id_2']}});
     expect(device.length).toBe(1);
     expect(device[0].name).toEqual('New Device Name 2');
 */

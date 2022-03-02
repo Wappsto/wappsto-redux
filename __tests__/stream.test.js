@@ -7,7 +7,10 @@ import {
   makeStreamSelector,
   makeEntitySelector,
   openStream,
-  closeStream
+  closeStream,
+  setStreamLostTime,
+  setStreamRetryTime,
+  streamStatus
 } from '../src';
 
 describe('stream', () => {
@@ -30,7 +33,10 @@ describe('stream', () => {
   });
 
   it('can open and close a stream', async () => {
-    const ws = await store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
+    const ws = await store.dispatch(openStream({
+      name: 'main',
+      subscription: [],
+      full: true }, null, {}));
 
     await server.connected;
 
@@ -38,21 +44,28 @@ describe('stream', () => {
     await store.dispatch(closeStream('main'));
     const ws3 = getStream(store.getState(), 'main');
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
 
     expect(ws).not.toBe(undefined);
     expect(ws2).not.toBe(undefined);
     expect(ws3).toBe(undefined);
   });
 
-  it('can open and handle a close event', async () => {
-    let ws2 = await store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
+  it('can reconnect', async () => {
+    setStreamRetryTime(100);
+    setStreamLostTime(200);
+
+    store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
 
     await server.connected;
 
-    console.log(ws2);
-
     server.error();
+
+    WS.clean();
+
+    server = new WS('ws://localhost/services/stream/open', { jsonProtocol: true });
 
     await server.connected;
 
@@ -70,15 +83,23 @@ describe('stream', () => {
       }
     });
 
-    await new Promise((r) => setTimeout(r, 1));
-
     const n = getEntity(store.getState(), 'network', 'network_id');
+    expect(n.name).toEqual('network name');
 
-    const ws = getStream(store.getState(), 'main');
+    let ws = getStream(store.getState(), 'main');
     expect(n.name).toEqual('network name');
     expect(ws).not.toBe(undefined);
-    console.log(ws, ws2);
-    expect(ws.status).toEqual(2);
+
+    expect(ws.status).toEqual(streamStatus.OPEN);
+
+    WS.clean();
+
+    await new Promise((r) => {
+      setTimeout(r, 400);
+    });
+
+    ws = getStream(store.getState(), 'main');
+    expect(ws.status).toEqual(streamStatus.LOST);
   });
 
   it('can handle stream messages', async () => {
@@ -148,7 +169,9 @@ describe('stream', () => {
       }
     });
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
     const n = getEntity(store.getState(), 'network', 'network_id');
     const d = getEntity(store.getState(), 'device', 'device_id');
     const v = getEntity(store.getState(), 'value', 'value_id');
@@ -176,7 +199,9 @@ describe('stream', () => {
       }
     });
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
     s = getEntity(store.getState(), 'state', 'state_id');
     expect(s.data).toEqual('2');
 
@@ -197,7 +222,9 @@ describe('stream', () => {
       }
     });
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
     s = getEntity(store.getState(), 'state', 'state_id');
     expect(s).toBe(undefined);
   });

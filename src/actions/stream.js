@@ -8,8 +8,16 @@ import schemas from '../util/schemas';
 export const UPDATE_STREAM = 'UPDATE_STREAM';
 export const REMOVE_STREAM = 'REMOVE_STREAM';
 
-const lostTimer = 1000 * 60;
-const retryTimer = 1000 * 5;
+let lostTimer = 1000 * 60;
+let retryTimer = 1000 * 5;
+
+export function setStreamLostTime(timeout) {
+  lostTimer = timeout;
+}
+
+export function setStreamRetryTime(timeout) {
+  retryTimer = timeout;
+}
 
 const timeouts = {};
 const websockets = {};
@@ -286,20 +294,20 @@ function startStream(stream, session, getState, dispatch, options, reconnecting)
         startStream(stream, session, getState, dispatch, options, true);
       }, retryTimer);
       timeouts[stream.name].retryTimeout = retryTimeout;
-      if (!reconnecting) {
-        const lostTimeout = setTimeout(() => {
-          clearStreamTimeouts(stream);
-          if (!ws.silent) {
-            dispatch(updateStream(stream.name, streamStatus.LOST, null, null, stream));
-          }
-          if (websockets[stream.name]) {
-            websockets[stream.name].stop = true;
-            websockets[stream.name].silent = true;
-            websockets[stream.name].close();
-          }
-        }, lostTimer);
-        timeouts[stream.name].lostTimeout = lostTimeout;
-      }
+
+      const lostTimeout = setTimeout(() => {
+        clearStreamTimeouts(stream);
+        if (!ws.silent) {
+          dispatch(updateStream(stream.name, streamStatus.LOST, null, null, stream));
+        }
+        if (websockets[stream.name]) {
+          websockets[stream.name].stop = true;
+          websockets[stream.name].silent = true;
+          websockets[stream.name].close();
+        }
+      }, lostTimer);
+      timeouts[stream.name].lostTimeout = lostTimeout;
+
       if (!ws.silent) {
         dispatch(
           updateStream(
