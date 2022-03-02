@@ -1,23 +1,16 @@
 import config from '../config';
 
 export const UUIDRegex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-b8-9][a-f0-9]{3}-[a-f0-9]{12}';
-const rex = new RegExp('^' + UUIDRegex + '$', 'i');
+const rex = new RegExp(`^${UUIDRegex}$`, 'i');
 
 export function isUUID(data) {
-  try {
-    if (data?.match(rex).length > 0) {
-      return true;
-    }
-  } catch (err) {
-    console.error(`Failed to test ${data} for uuid`, err);
-  }
-  return false;
+  return data && data.match(rex).length > 0;
 }
 
 export function getUrlInfo(url, skip = 0) {
-  let service = '',
-    parent = '',
-    id = '';
+  let service = '';
+  let parent = '';
+  let id = '';
   if (url) {
     let split = url.split('?')[0];
     split = split.replace(/(.?services)?(.?\d+\.\d+)?/, '').split('/');
@@ -29,7 +22,7 @@ export function getUrlInfo(url, skip = 0) {
       if (split.length > 3 + skip) {
         parent = {
           type: split[split.length - 3 - skip],
-          id: split[split.length - 2 - skip]
+          id: split[split.length - 2 - skip],
         };
       }
     }
@@ -39,11 +32,10 @@ export function getUrlInfo(url, skip = 0) {
 
 export function getServiceVersion(service) {
   if (service && config.serviceVersion) {
-    if (config.serviceVersion.hasOwnProperty(service)) {
+    if (config.serviceVersion.service) {
       return config.serviceVersion[service];
-    } else {
-      return config.serviceVersion.default;
     }
+    return config.serviceVersion.default;
   }
   return undefined;
 }

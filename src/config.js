@@ -1,5 +1,5 @@
-let config = {
-  baseUrl: '/services'
+const config = {
+  baseUrl: '/services',
 };
 
 export default config;

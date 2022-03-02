@@ -3,13 +3,12 @@ import equal from 'deep-equal';
 
 import { ADD_ENTITIES, REMOVE_ENTITIES } from '../actions/entities';
 import schemas from '../util/schemas';
-import { parse } from '../util/parser';
-import reducerRegistry from '../util/reducerRegistry';
+import parse from '../util/parser';
 
 const initialState = {};
 
 function mergeUnique(arr1, arr2) {
-  let arr = [...arr1];
+  const arr = [...arr1];
   arr2.forEach((e) => {
     if (!arr1.includes(e)) {
       arr.push(e);
@@ -18,12 +17,22 @@ function mergeUnique(arr1, arr2) {
   return arr;
 }
 
+function addEntity(state, type, data) {
+  const newState = { ...state };
+  const newData = normalize(data, schemas.getSchema(type));
+  Object.keys(newData.entities).forEach((key) => {
+    newState[key] = { ...newState[key], ...newData.entities[key] };
+  });
+  return { state: newState, result: newData.result };
+}
+
 function addEntities(state, type, data) {
-  data = normalize(data, [schemas.getSchema(type)]);
-  for (let key in data.entities) {
-    state[key] = Object.assign({}, state[key], data.entities[key]);
-  }
-  return { state, result: data.result };
+  const newState = { ...state };
+  const newData = normalize(data, [schemas.getSchema(type)]);
+  Object.keys(newData.entities).forEach((key) => {
+    newState[key] = { ...newState[key], ...newData.entities[key] };
+  });
+  return { state: newState, result: newData.result };
 }
 
 function removeEntities(state, type, ids = []) {
@@ -31,70 +40,90 @@ function removeEntities(state, type, ids = []) {
   if (typeof ids === 'string') {
     newIds = [ids];
   }
+  let newState = { ...state };
   newIds.forEach((id) => {
-    let newData = removeEntity(state, type, id);
-    state = newData.state;
+    // eslint-disable-next-line no-use-before-define
+    const newData = removeEntity(newState, type, id);
+    newState = newData.state;
   });
   const def = schemas.getSchemaTree(type);
-  state[def.name] = Object.assign({}, state[def.name]);
-  return { state, result: [] };
+  newState[def.name] = { ...newState[def.name] };
+  return { state: newState, result: [] };
 }
 
 function removeAllEntities(state, type) {
-  let def = schemas.getSchemaTree(type);
-  let entities = state[def.name];
+  let newState = { ...state };
+  const def = schemas.getSchemaTree(type);
+  const entities = newState[def.name];
   if (entities) {
-    let newData = removeEntities(state, type, Object.keys(entities));
-    state = newData.state;
+    const newData = removeEntities(newState, type, Object.keys(entities));
+    newState = newData.state;
   }
-  return { state, result: [] };
+  return { state: newState, result: [] };
 }
 
 function addChildEntities(state, type, id, child, data, reset = true) {
-  let newData, result;
-  let def = schemas.getSchemaTree(type);
-  let element = state[def.name] && state[def.name][id];
+  let newData;
+  let result;
+  let newState = { ...state };
+  const def = schemas.getSchemaTree(type);
+  const element = newState[def.name] && newState[def.name][id];
   let childDef = def.dependencies.find((d) => d.key === child);
   if (!childDef) {
     childDef = {
       key: child,
-      type: data.constructor === Array && 'many'
+      type: data.constructor === Array && 'many',
     };
   }
   if (childDef.type === 'many') {
-    newData = addEntities(state, child, data);
+    newData = addEntities(newState, child, data);
     result = newData.result;
     if (
       element &&
       !equal(
         element[child],
-        data.map((i) => i.meta.id)
+        data.map((i) => i.meta.id),
       )
     ) {
-      const newElement = Object.assign({}, element);
+      const newElement = { ...element };
       newElement[child] = reset ? result : mergeUnique(element[child], result);
-      state[def.name][id] = newElement;
+      newState[def.name][id] = newElement;
     }
   } else {
-    newData = addEntity(state, child, data);
+    newData = addEntity(newState, child, data);
     result = newData.result;
     if (element && !equal(element[child], data.meta.id)) {
-      const newElement = Object.assign({}, element);
+      const newElement = { ...element };
       newElement[child] = result;
-      state[def.name][id] = newElement;
+      newState[def.name][id] = newElement;
     }
   }
-  state = newData.state;
-  return { state, result };
+  newState = newData.state;
+  return { state: newState, result };
+}
+
+function removeEntity(state, type, id) {
+  let newState = { ...state };
+  const def = schemas.getSchemaTree(type);
+  const element = newState[def.name] && newState[def.name][id];
+  if (element) {
+    def.dependencies.forEach((dep) => {
+      // eslint-disable-next-line no-use-before-define
+      const newData = removeChildEntities(newState, type, id, dep.key);
+      newState = newData.state;
+    });
+    delete newState[def.name][id];
+  }
+  return { state: newState };
 }
 
 function removeChildEntities(state, type, id, child, ids) {
-  let result, newData;
-  let def = schemas.getSchemaTree(type);
-  let element = state[def.name] && state[def.name][id];
-  let childDef = def.dependencies.find((d) => d.key === child);
-  newData = removeEntities(state, child, ids || (element && element[child]) || []);
-  state = newData.state;
+  let result;
+  const def = schemas.getSchemaTree(type);
+  const element = state[def.name] && state[def.name][id];
+  const childDef = def.dependencies.find((d) => d.key === child);
+  const newData = removeEntities(state, child, ids || (element && element[child]) || []);
+  const newState = newData.state;
   if (
     (childDef && childDef.type === 'many') ||
     (element && element[child] && element[child].constructor === Array)
@@ -108,95 +137,76 @@ function removeChildEntities(state, type, id, child, ids) {
     result = undefined;
   }
   if (element) {
-    const newElement = Object.assign({}, element);
+    const newElement = { ...element };
     newElement[child] = result;
-    state[def.name][id] = newElement;
+    newState[def.name][id] = newElement;
   }
-  return { state, result };
+  return { state: newState, result };
 }
 
-function addEntity(state, type, data) {
-  data = normalize(data, schemas.getSchema(type));
-  for (let key in data.entities) {
-    state[key] = Object.assign({}, state[key], data.entities[key]);
-  }
-  return { state, result: data.result };
-}
-
-function removeEntity(state, type, id) {
-  let def = schemas.getSchemaTree(type);
-  let element = state[def.name] && state[def.name][id];
-  if (element) {
-    def.dependencies.forEach((dep) => {
-      let newData = removeChildEntities(state, type, id, dep.key);
-      state = newData.state;
-    });
-    delete state[def.name][id];
-  }
-  return { state };
-}
-
-export default function reducer(state = initialState, action) {
-  let newData, data;
+function reducer(state = initialState, action = {}) {
+  let newData;
+  let data;
+  let newState = { ...state };
+  let newAction;
 
   switch (action.type) {
     case ADD_ENTITIES:
       data = parse(action.data);
-      state = Object.assign({}, state);
       if (data.constructor === Object) {
         data = [data];
       }
       if (action.options.parent) {
         if (action.options.reset !== false) {
           newData = removeChildEntities(
-            state,
+            newState,
             action.options.parent.type,
             action.options.parent.id,
-            action.service
+            action.service,
           );
-          state = newData.state;
+          newState = newData.state;
         }
         newData = addChildEntities(
-          state,
-          action.options.parent.type,
+          newState,
+          newState.options.parent.type,
           action.options.parent.id,
           action.service,
           data,
-          action.options.reset
+          action.options.reset,
         );
-        state = newData.state;
+        newState = newData.state;
       } else {
         if (action.options.reset !== false) {
-          newData = removeAllEntities(state, action.service);
-          state = newData.state;
+          newData = removeAllEntities(newState, action.service);
+          newState = newData.state;
         }
-        newData = addEntities(state, action.service, data);
-        state = newData.state;
+        newData = addEntities(newState, action.service, data);
+        newState = newData.state;
       }
-      return state;
+      return newState;
     case REMOVE_ENTITIES:
-      state = Object.assign({}, state);
-      if (action.options.parent) {
+      newAction = { ...action };
+      if (newAction.options.parent) {
         newData = removeChildEntities(
-          state,
-          action.options.parent.type,
-          action.options.parent.id,
-          action.service,
-          action.ids
+          newState,
+          newAction.options.parent.type,
+          newAction.options.parent.id,
+          newAction.service,
+          newAction.ids,
         );
-        state = newData.state;
+        newState = newData.state;
       } else {
-        if (!action.ids) {
-          let def = schemas.getSchemaTree(action.service);
-          action.ids = Object.keys(state[def.name] || {});
+        if (!newAction.ids) {
+          const def = schemas.getSchemaTree(newAction.service);
+          newAction.ids = Object.keys(newState[def.name] || {});
         }
-        newData = removeEntities(state, action.service, action.ids);
-        state = newData.state;
+        newData = removeEntities(newState, newAction.service, newAction.ids);
+        newState = newData.state;
       }
-      return state;
+      return newState;
     default:
       return state;
   }
 }
 
-reducerRegistry.register('entities', reducer);
+export default reducer;

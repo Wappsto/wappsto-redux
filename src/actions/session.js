@@ -6,24 +6,24 @@ export const LIMIT_REACHED = 'LIMIT_REACHED';
 export function addSession(data) {
   return {
     type: ADD_SESSION,
-    data
+    data,
   };
 }
 
 export function removeSession() {
   return {
-    type: REMOVE_SESSION
+    type: REMOVE_SESSION,
   };
 }
 
 export function invalidSession() {
   return {
-    type: INVALID_SESSION
+    type: INVALID_SESSION,
   };
 }
 
 export function limitReached() {
   return {
-    type: LIMIT_REACHED
+    type: LIMIT_REACHED,
   };
 }

@@ -1,22 +1,22 @@
 export class ReducerRegistry {
   constructor() {
-    this._emitChange = null;
-    this._reducers = {};
+    this.emitChange = null;
+    this.reducers = {};
   }
 
   getReducers() {
-    return { ...this._reducers };
+    return { ...this.reducers };
   }
 
   register(name, reducer) {
-    this._reducers = { ...this._reducers, [name]: reducer };
-    if (this._emitChange) {
-      this._emitChange(this.getReducers());
+    this.reducers = { ...this.reducers, [name]: reducer };
+    if (this.emitChange) {
+      this.emitChange(this.getReducers());
     }
   }
 
   setChangeListener(listener) {
-    this._emitChange = listener;
+    this.emitChange = listener;
   }
 }
 

@@ -2,7 +2,7 @@ import { onLogout, trigger } from '../src';
 
 describe('events', () => {
   it('trigger an logout event', () => {
-    let fun = jest.fn();
+    const fun = jest.fn();
     onLogout(fun);
     trigger('logout', 'test');
 
@@ -11,7 +11,7 @@ describe('events', () => {
   });
 
   it('will not trigger an logout event with an invalid event', () => {
-    let fun = jest.fn();
+    const fun = jest.fn();
     onLogout(fun);
     trigger('login', 'test');
 

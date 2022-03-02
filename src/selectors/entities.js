@@ -6,13 +6,15 @@ function getTreeName(key) {
 }
 
 function matchObject(obj1, obj2) {
-  for (const key in obj2) {
-    if (obj1.hasOwnProperty(key)) {
-      let left = obj1[key];
-      let right = obj2[key];
+  for (let i = 0; i < Object.keys(obj2).length; i += 1) {
+    const key = Object.keys(obj2)[i];
+    if (Object.prototype.hasOwnProperty.call(obj1, key)) {
+      const left = obj1[key];
+      const right = obj2[key];
       if (left && right && left.constructor !== right.constructor) {
         return false;
-      } else if (typeof left === 'object') {
+      }
+      if (typeof left === 'object') {
         if (!matchObject(left, right)) {
           return false;
         }
@@ -33,14 +35,14 @@ const makeStateTypeSelector = () =>
   createSelector(
     stateSelector,
     (_, type) => type,
-    (entities, type) => entities && entities[getTreeName(type)]
+    (entities, type) => entities && entities[getTreeName(type)],
   );
 
 const makeParentStateTypeSelector = () =>
   createSelector(
     stateSelector,
     (_, _1, options) => options && options.parent && options.parent.type,
-    (entities, type) => entities && entities[getTreeName(type)]
+    (entities, type) => entities && entities[getTreeName(type)],
   );
 
 const makeParentSelector = () => {
@@ -53,7 +55,7 @@ const makeParentSelector = () => {
         return entities[id];
       }
       return null;
-    }
+    },
   );
 };
 
@@ -70,13 +72,14 @@ export const makeEntitySelector = () => {
         if (options.constructor === String) {
           // options is an id
           return entities[options];
-        } else if (options.constructor === Object) {
+        }
+        if (options.constructor === Object) {
           if (options.parent) {
-            if (parent && parent.hasOwnProperty(type)) {
+            if (parent && Object.prototype.hasOwnProperty.call(parent, type)) {
               if (parent[type].constructor === Array) {
-                for (let i = 0; i < parent[type].length; i++) {
-                  let id = parent[type][i];
-                  let found = entities[id];
+                for (let i = 0; i < parent[type].length; i += 1) {
+                  const id = parent[type][i];
+                  const found = entities[id];
                   if (found && matchObject(found, options.filter || {})) {
                     return found;
                   }
@@ -84,14 +87,14 @@ export const makeEntitySelector = () => {
               } else {
                 if (options.filter && matchObject(parent[type], options.filter || {})) {
                   return parent[type];
-                } else {
-                  return undefined;
                 }
+                return undefined;
               }
             }
           } else {
-            for (let key in entities) {
-              let val = entities[key];
+            for (let i = 0; i < Object.keys(entities).length; i += 1) {
+              const key = Object.keys(entities)[i];
+              const val = entities[key];
               if (matchObject(val, options.filter || {})) {
                 return val;
               }
@@ -100,7 +103,7 @@ export const makeEntitySelector = () => {
         }
       }
       return undefined;
-    }
+    },
   );
 };
 
@@ -119,7 +122,7 @@ function shallowEqualArrays(arrA, arrB) {
     return false;
   }
 
-  for (var i = 0; i < len; i++) {
+  for (let i = 0; i < len; i += 1) {
     if (arrA[i] !== arrB[i]) {
       return false;
     }
@@ -140,7 +143,9 @@ export const makeEntitiesSelector = () => {
     (entities, parent, type, options = {}) => {
       let result;
       if (entities) {
-        let filters, ids, lookIn;
+        let filters;
+        let ids;
+        let lookIn;
         if (options.constructor === String) {
           ids = [options];
         } else if (options.constructor === Array) {
@@ -174,7 +179,7 @@ export const makeEntitiesSelector = () => {
         }
         if (options.parent) {
           result = [];
-          if (parent && parent.hasOwnProperty(type)) {
+          if (parent && Object.prototype.hasOwnProperty.call(parent, type)) {
             if (filters) {
               filters.forEach((filter) => {
                 parent[type].forEach((id) => {
@@ -193,20 +198,18 @@ export const makeEntitiesSelector = () => {
               });
             }
           }
-        } else {
-          if (filters) {
-            result = [];
-            filters.forEach((filter) => {
-              for (let key in lookIn) {
-                const val = lookIn[key];
-                if (matchObject(val, filter) && !result.includes(val)) {
-                  result.push(val);
-                }
+        } else if (filters) {
+          result = [];
+          filters.forEach((filter) => {
+            Object.keys(lookIn).forEach((key) => {
+              const val = lookIn[key];
+              if (matchObject(val, filter) && !result.includes(val)) {
+                result.push(val);
               }
             });
-          } else {
-            result = Object.values(lookIn);
-          }
+          });
+        } else {
+          result = Object.values(lookIn);
         }
       } else {
         result = defaultArr;
@@ -214,11 +217,10 @@ export const makeEntitiesSelector = () => {
       result = result.slice(0, options.limit);
       if (shallowEqualArrays(result, old)) {
         return old;
-      } else {
-        old = result;
-        return result;
       }
-    }
+      old = result;
+      return result;
+    },
   );
 };
 
@@ -230,5 +232,5 @@ export const getUserData = createSelector(
       return Object.values(entities)[0];
     }
     return undefined;
-  }
+  },
 );

@@ -1,4 +1,4 @@
-export function parse(json) {
+function parse(json) {
   if (!json) {
     return [];
   }
@@ -7,9 +7,12 @@ export function parse(json) {
       return [];
     }
     if (json.meta.type === 'attributelist') {
-      json.meta.id = json.path;
-      return [json];
+      const result = json;
+      result.meta.id = json.path;
+      return [result];
     }
   }
   return json;
 }
+
+export default parse;

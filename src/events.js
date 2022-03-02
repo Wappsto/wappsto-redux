@@ -1,5 +1,5 @@
 const events = {
-  logout: []
+  logout: [],
 };
 
 function onLogout(cb) {

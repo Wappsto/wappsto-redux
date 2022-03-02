@@ -10,12 +10,12 @@ import {
   closeStream,
   setStreamLostTime,
   setStreamRetryTime,
-  status
+  streamStatus,
 } from '../src';
 
 describe('stream', () => {
   const getEntity = makeEntitySelector();
-  let getStream = makeStreamSelector();
+  const getStream = makeStreamSelector();
   let server;
   let store;
 
@@ -29,20 +29,31 @@ describe('stream', () => {
   });
 
   it('fails to open stream without name', async () => {
-    let ws = store.dispatch(openStream({}, null, {}));
-    expect(ws).toBe(undefined);
+    await expect(store.dispatch(openStream())).rejects.toThrow(TypeError);
   });
 
   it('can open and close a stream', async () => {
-    let ws = store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
+    const ws = await store.dispatch(
+      openStream(
+        {
+          name: 'main',
+          subscription: [],
+          full: true,
+        },
+        null,
+        {},
+      ),
+    );
 
     await server.connected;
 
-    let ws2 = getStream(store.getState(), 'main');
+    const ws2 = getStream(store.getState(), 'main');
     await store.dispatch(closeStream('main'));
-    let ws3 = getStream(store.getState(), 'main');
+    const ws3 = getStream(store.getState(), 'main');
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
 
     expect(ws).not.toBe(undefined);
     expect(ws2).not.toBe(undefined);
@@ -68,35 +79,38 @@ describe('stream', () => {
     server.send({
       event: 'create',
       meta_object: {
-        type: 'network'
+        type: 'network',
       },
       network: {
         meta: {
           type: 'network',
-          id: 'network_id'
+          id: 'network_id',
         },
-        name: 'network name'
-      }
+        name: 'network name',
+      },
     });
 
     const n = getEntity(store.getState(), 'network', 'network_id');
     expect(n.name).toEqual('network name');
 
     let ws = getStream(store.getState(), 'main');
-
+    expect(n.name).toEqual('network name');
     expect(ws).not.toBe(undefined);
-    expect(ws.status).toEqual(status.OPEN);
+
+    expect(ws.status).toEqual(streamStatus.OPEN);
 
     WS.clean();
 
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => {
+      setTimeout(r, 400);
+    });
 
     ws = getStream(store.getState(), 'main');
-    expect(ws.status).toEqual(status.LOST);
+    expect(ws.status).toEqual(streamStatus.LOST);
   });
 
   it('can handle stream messages', async () => {
-    store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
+    await store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
 
     await server.connected;
 
@@ -105,67 +119,69 @@ describe('stream', () => {
     server.send({
       event: 'create',
       meta_object: {
-        type: 'network'
+        type: 'network',
       },
       network: {
         meta: {
           type: 'network',
-          id: 'network_id'
+          id: 'network_id',
         },
-        name: 'network name'
-      }
+        name: 'network name',
+      },
     });
 
     server.send({
       event: 'create',
       meta_object: {
-        type: 'device'
+        type: 'device',
       },
       path: '/network/network_id/device',
       device: {
         meta: {
           type: 'device',
-          id: 'device_id'
+          id: 'device_id',
         },
-        name: 'device name'
-      }
+        name: 'device name',
+      },
     });
 
     server.send({
       event: 'create',
       meta_object: {
-        type: 'value'
+        type: 'value',
       },
       path: '/network/network_id/device/device_id/value',
       value: {
         meta: {
           type: 'value',
-          id: 'value_id'
+          id: 'value_id',
         },
-        name: 'value name'
-      }
+        name: 'value name',
+      },
     });
 
     server.send({
       event: 'create',
       meta_object: {
-        type: 'state'
+        type: 'state',
       },
       path: '/network/network_id/device/device_id/value/value_id/state',
       data: {
         meta: {
           type: 'state',
-          id: 'state_id'
+          id: 'state_id',
         },
         type: 'Report',
-        data: '1'
-      }
+        data: '1',
+      },
     });
 
-    await new Promise((r) => setTimeout(r, 1));
-    let n = getEntity(store.getState(), 'network', 'network_id');
-    let d = getEntity(store.getState(), 'device', 'device_id');
-    let v = getEntity(store.getState(), 'value', 'value_id');
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
+    const n = getEntity(store.getState(), 'network', 'network_id');
+    const d = getEntity(store.getState(), 'device', 'device_id');
+    const v = getEntity(store.getState(), 'value', 'value_id');
     let s = getEntity(store.getState(), 'state', 'state_id');
 
     expect(n.name).toEqual('network name');
@@ -177,20 +193,22 @@ describe('stream', () => {
     server.send({
       event: 'update',
       meta_object: {
-        type: 'state'
+        type: 'state',
       },
       path: '/network/network_id/device/device_id/value/value_id/state/state_id',
       data: {
         meta: {
           type: 'state',
-          id: 'state_id'
+          id: 'state_id',
         },
         type: 'Report',
-        data: '2'
-      }
+        data: '2',
+      },
     });
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
     s = getEntity(store.getState(), 'state', 'state_id');
     expect(s.data).toEqual('2');
 
@@ -198,20 +216,22 @@ describe('stream', () => {
       event: 'delete',
       meta_object: {
         id: 'state_id',
-        type: 'state'
+        type: 'state',
       },
       path: '/network/network_id/device/device_id/value/value_id/state/state_id',
       data: {
         meta: {
           type: 'state',
-          id: 'state_id'
+          id: 'state_id',
         },
         type: 'Report',
-        data: '2'
-      }
+        data: '2',
+      },
     });
 
-    await new Promise((r) => setTimeout(r, 1));
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
     s = getEntity(store.getState(), 'state', 'state_id');
     expect(s).toBe(undefined);
   });
