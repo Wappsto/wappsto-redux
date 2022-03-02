@@ -1,7 +1,5 @@
 import querystring from 'query-string';
 
-//import { _request } from './request';
-
 import config from '../config';
 import { getUrlInfo, getServiceVersion } from '../util/helpers';
 import { addEntities, removeEntities } from './entities';
@@ -10,8 +8,16 @@ import schemas from '../util/schemas';
 export const UPDATE_STREAM = 'UPDATE_STREAM';
 export const REMOVE_STREAM = 'REMOVE_STREAM';
 
-const lostTimer = 1000 * 60;
-const retryTimer = 1000 * 5;
+let lostTimer = 1000 * 60;
+let retryTimer = 1000 * 5;
+
+export function setStreamLostTime(timeout) {
+  lostTimer = timeout;
+}
+
+export function setStreamRetryTime(timeout) {
+  retryTimer = timeout;
+}
 
 let timeouts = {};
 let websockets = {};
@@ -292,19 +298,19 @@ function _startStream(stream, session, getState, dispatch, options, reconnecting
     if (!ws.stop && e.code !== 4001) {
       timeouts[stream.name] = {};
       let retryTimeout = setTimeout(() => {
-        _startStream(stream, session, getState, dispatch, options, true);
+        _startStream(stream, session, getState, dispatch, options, false);
       }, retryTimer);
       timeouts[stream.name].retryTimeout = retryTimeout;
       if (!reconnecting) {
         let lostTimeout = setTimeout(() => {
           _clearStreamTimeouts(stream);
-          if (!ws.silent) {
-            dispatch(updateStream(stream.name, status.LOST, null, null, stream));
-          }
           if (websockets[stream.name]) {
             websockets[stream.name].stop = true;
             websockets[stream.name].silent = true;
             websockets[stream.name].close();
+          }
+          if (!ws.silent) {
+            dispatch(updateStream(stream.name, status.LOST, null, null, stream));
           }
         }, lostTimer);
         timeouts[stream.name].lostTimeout = lostTimeout;

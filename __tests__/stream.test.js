@@ -7,7 +7,10 @@ import {
   makeStreamSelector,
   makeEntitySelector,
   openStream,
-  closeStream
+  closeStream,
+  setStreamLostTime,
+  setStreamRetryTime,
+  status
 } from '../src';
 
 describe('stream', () => {
@@ -46,20 +49,50 @@ describe('stream', () => {
     expect(ws3).toBe(undefined);
   });
 
-  it('can open and handle a close event', async () => {
+  it('can reconnect', async () => {
+    setStreamRetryTime(100);
+    setStreamLostTime(200);
+
     store.dispatch(openStream({ name: 'main', subscription: [], full: true }, null, {}));
 
     await server.connected;
 
     server.error();
-    //server.close();
+
+    WS.clean();
+
+    server = new WS('ws://localhost/services/stream/open', { jsonProtocol: true });
 
     await server.connected;
+
+    server.send({
+      event: 'create',
+      meta_object: {
+        type: 'network'
+      },
+      network: {
+        meta: {
+          type: 'network',
+          id: 'network_id'
+        },
+        name: 'network name'
+      }
+    });
+
+    const n = getEntity(store.getState(), 'network', 'network_id');
+    expect(n.name).toEqual('network name');
 
     let ws = getStream(store.getState(), 'main');
 
     expect(ws).not.toBe(undefined);
-    expect(ws.status).toEqual(2);
+    expect(ws.status).toEqual(status.OPEN);
+
+    WS.clean();
+
+    await new Promise((r) => setTimeout(r, 500));
+
+    ws = getStream(store.getState(), 'main');
+    expect(ws.status).toEqual(status.LOST);
   });
 
   it('can handle stream messages', async () => {
