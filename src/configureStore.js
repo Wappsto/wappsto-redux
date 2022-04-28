@@ -1,5 +1,5 @@
 import './reducers';
-import { applyMiddleware, combineReducers, createStore } from 'redux';
+import { applyMiddleware, combineReducers, createStore, compose } from 'redux';
 import thunk from 'redux-thunk';
 import { REMOVE_SESSION } from './actions/session';
 import { cancelAllRequests } from './actions/request';
@@ -7,7 +7,7 @@ import { trigger } from './events';
 
 import reducerRegistry from './util/reducerRegistry';
 
-function configureStore(initialState = {}) {
+function configureStore(initialState = {}, enhancers = []) {
   // Preserve initial state for not-yet-loaded reducers
   const combine = (reducers) => {
     const newReducers = { ...reducers };
@@ -29,10 +29,15 @@ function configureStore(initialState = {}) {
     };
   };
 
+  const createEnhancer = () => {
+    enhancers.push(applyMiddleware(thunk));
+    return compose(...enhancers);
+  };
+
   const store = createStore(
     combine(reducerRegistry.getReducers()),
     initialState,
-    applyMiddleware(thunk),
+    createEnhancer(),
   );
 
   // Replace the store's reducer whenever a new reducer is registered.

@@ -10,4 +10,23 @@ describe('configureStore', () => {
     const cs = configureStore({ items: { test: true } });
     expect(cs.getState().items.test).toBe(true);
   });
+
+  it('can create a new store with enhancers', () => {
+    let handled = 0;
+    const testEnhancer =
+      createStore => (reducer, initialState, enhancer) => {
+        const testReducer = (state, action) => {
+          const newState = reducer(state, action)
+          handled += 1;
+          return newState
+        }
+
+        return createStore(testReducer, initialState, enhancer)
+      }
+
+    const cs = configureStore({ items: { test: true } }, [testEnhancer]);
+
+    expect(cs.getState().items.test).toBe(true);
+    expect(handled).toBe(1);
+  });
 });
