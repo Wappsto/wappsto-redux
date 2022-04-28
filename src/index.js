@@ -1,4 +1,4 @@
-import { default as config } from './config';
+import config from './config';
 import './reducers';
 
 export * from './events';
