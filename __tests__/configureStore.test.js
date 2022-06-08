@@ -13,16 +13,15 @@ describe('configureStore', () => {
 
   it('can create a new store with enhancers', () => {
     let handled = 0;
-    const testEnhancer =
-      createStore => (reducer, initialState, enhancer) => {
-        const testReducer = (state, action) => {
-          const newState = reducer(state, action)
-          handled += 1;
-          return newState
-        }
+    const testEnhancer = (createStore) => (reducer, initialState, enhancer) => {
+      const testReducer = (state, action) => {
+        const newState = reducer(state, action);
+        handled += 1;
+        return newState;
+      };
 
-        return createStore(testReducer, initialState, enhancer)
-      }
+      return createStore(testReducer, initialState, enhancer);
+    };
 
     const cs = configureStore({ items: { test: true } }, [testEnhancer]);
 

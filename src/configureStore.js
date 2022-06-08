@@ -34,11 +34,7 @@ function configureStore(initialState = {}, enhancers = []) {
     return compose(...enhancers);
   };
 
-  const store = createStore(
-    combine(reducerRegistry.getReducers()),
-    initialState,
-    createEnhancer(),
-  );
+  const store = createStore(combine(reducerRegistry.getReducers()), initialState, createEnhancer());
 
   // Replace the store's reducer whenever a new reducer is registered.
   reducerRegistry.setChangeListener((reducers) => {

@@ -6,7 +6,7 @@ describe('config', () => {
   });
 
   it('can be updated', () => {
-    use({test: 'data', baseUrl: 'test'});
+    use({ test: 'data', baseUrl: 'test' });
     expect(config.test).toEqual('data');
     expect(config.baseUrl).toEqual('test');
   });
