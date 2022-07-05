@@ -17,10 +17,10 @@ describe('config', () => {
       serviceVersion: {
         default: '1.0',
         stream: '2.1',
-      }
+      },
     });
     const defaultVersion = getServiceVersion('test');
-    const streamVersion =  getServiceVersion('stream');
+    const streamVersion = getServiceVersion('stream');
 
     expect(defaultVersion).toEqual('1.0');
     expect(streamVersion).toEqual('2.1');
