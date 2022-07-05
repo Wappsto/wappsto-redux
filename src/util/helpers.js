@@ -1,12 +1,5 @@
 import config from '../config';
 
-export const UUIDRegex = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-b8-9][a-f0-9]{3}-[a-f0-9]{12}';
-const rex = new RegExp(`^${UUIDRegex}$`, 'i');
-
-export function isUUID(data) {
-  return data && data.match(rex).length > 0;
-}
-
 export function getUrlInfo(url, skip = 0) {
   let service = '';
   let parent = '';
@@ -32,7 +25,7 @@ export function getUrlInfo(url, skip = 0) {
 
 export function getServiceVersion(service) {
   if (service && config.serviceVersion) {
-    if (config.serviceVersion.service) {
+    if (config.serviceVersion[service]) {
       return config.serviceVersion[service];
     }
     return config.serviceVersion.default;
