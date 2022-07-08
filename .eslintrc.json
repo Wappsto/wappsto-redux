@@ -1,10 +1,13 @@
 {
-    "parserOptions": {
+  "parserOptions": {
     "sourceType": "module",
     "allowImportExportEverywhere": false,
     "codeFrame": false
   },
-  "extends": ["airbnb", "prettier"],
+  "plugins": [
+    "react-redux"
+  ],
+  "extends": ["airbnb", "prettier","plugin:react-redux/recommended"],
   "env": {
       "browser": true,
       "jest": true
