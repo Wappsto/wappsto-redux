@@ -25,6 +25,13 @@ describe('entities', () => {
     const add = await store.dispatch(
       addEntities('network', { meta: { type: 'network', id: 'network_id' }, name: 'network' }),
     );
+    await store.dispatch(
+      addEntities(
+        'network',
+        { meta: { type: 'network', id: 'network_id2' }, name: 'network2' },
+        { reset: false },
+      ),
+    );
     const item = getEntity(store.getState(), 'network', 'network_id');
 
     const rem = await store.dispatch(removeEntities('network', 'network_id'));
@@ -161,5 +168,24 @@ describe('entities', () => {
     expect(devices.length).toBe(2);
     expect(devices[0].name).toEqual('New Device Name 2');
     expect(devices[1].name).toEqual('Device Name 3');
+  });
+
+  it('can add children', async () => {
+    await store.dispatch(
+      addEntities('network', { meta: { type: 'network', id: 'network_id' }, name: 'network' }),
+    );
+    await store.dispatch(
+      addEntities(
+        'device',
+        { meta: { type: 'device', id: 'device_id' }, name: 'device' },
+        { reset: false, parent: { type: 'network', id: 'network_id' } },
+      ),
+    );
+
+    const network = getEntity(store.getState(), 'network', 'network_id');
+    const device = getEntity(store.getState(), 'device', 'device_id');
+
+    expect(network.name).toEqual('network');
+    expect(device.name).toEqual('device');
   });
 });

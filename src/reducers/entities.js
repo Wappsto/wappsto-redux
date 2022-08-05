@@ -8,9 +8,9 @@ import parse from '../util/parser';
 const initialState = {};
 
 function mergeUnique(arr1, arr2) {
-  const arr = [...arr1];
+  const arr = arr1 ? [...arr1] : [];
   arr2.forEach((e) => {
-    if (!arr1.includes(e)) {
+    if (!arr1 || !arr1.includes(e)) {
       arr.push(e);
     }
   });
@@ -168,7 +168,7 @@ function reducer(state = initialState, action = {}) {
         }
         newData = addChildEntities(
           newState,
-          newState.options.parent.type,
+          action.options.parent.type,
           action.options.parent.id,
           action.service,
           data,
