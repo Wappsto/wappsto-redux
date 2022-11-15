@@ -1,4 +1,4 @@
-export class ReducerRegistry {
+class ReducerRegistry {
   constructor() {
     this.emitChange = null;
     this.reducers = {};
