@@ -70,6 +70,9 @@ function splitUrlAndOptions(url, options) {
 function getUrlWithQuery(url, options) {
   const { service } = getUrlInfo(url);
   const version = options.version || getServiceVersion(service);
+  if(url.startsWith('http')) {
+    return url;
+  }
   let result = config.baseUrl + (version ? `/${version}` : '') + url;
   if (options.query && Object.keys(options.query).length > 0) {
     result += result.indexOf('?') === -1 ? '?' : '&';

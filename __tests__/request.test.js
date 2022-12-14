@@ -41,6 +41,19 @@ describe('request', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it('can make a request with full URL', async () => {
+    const req = await store.dispatch(
+      makeRequest({
+        dispatchEntities: false,
+        method: 'GET',
+        url: 'https://google.com',
+      }),
+    );
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(req.options.url).toEqual('https://google.com');
+  });
+
   it('can make a request with query', async () => {
     const req = await store.dispatch(
       makeRequest({
