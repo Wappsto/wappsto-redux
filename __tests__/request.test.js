@@ -42,16 +42,21 @@ describe('request', () => {
   });
 
   it('can make a request with full URL', async () => {
+    const res = {"file_id":"dc1695e7-346d-4e64-9dcf-29c562362042","status":"ok"};
+    fetch.mockResponseOnce(JSON.stringify(res), { status: 201 });
+
     const req = await store.dispatch(
       makeRequest({
-        dispatchEntities: false,
         method: 'GET',
-        url: 'https://google.com',
+        url: 'https://showme.wappsto.com',
       }),
     );
 
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(req.options.url).toEqual('https://google.com');
+    expect(req.options.url).toEqual('https://showme.wappsto.com');
+    expect(req.status).toBe(201);
+    expect(req.options.method).toEqual('GET');
+    expect(req.json).toEqual(res);
   });
 
   it('can make a request with query', async () => {

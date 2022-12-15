@@ -194,11 +194,11 @@ let localRequest = async (options) => {
     try {
       const json = await response.clone().json();
       return {
-        rawResponse: response,
         ok: response.ok,
         status: response.status,
         json,
         options,
+        rawResponse: response,
       };
     } catch (e) {
       const text = await response.clone().text();
