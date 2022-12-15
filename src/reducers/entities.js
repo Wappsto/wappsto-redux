@@ -27,6 +27,9 @@ function addEntity(state, type, data) {
 }
 
 function addEntities(state, type, data) {
+  if(!type) {
+    return { state, result: data.result};
+  }
   const newState = { ...state };
   const newData = normalize(data, [schemas.getSchema(type)]);
   Object.keys(newData.entities).forEach((key) => {

@@ -7,7 +7,7 @@ import {
   makeRequest,
   removeRequest,
   overrideRequest,
-  cancelAllRequests,
+  cancelAllRequests
 } from '../src';
 
 describe('request', () => {
@@ -45,18 +45,28 @@ describe('request', () => {
     const res = {"file_id":"dc1695e7-346d-4e64-9dcf-29c562362042","status":"ok"};
     fetch.mockResponseOnce(JSON.stringify(res), { status: 201 });
 
+    const requestId = 1;
     const req = await store.dispatch(
       makeRequest({
         method: 'GET',
         url: 'https://showme.wappsto.com',
+        id: requestId
       }),
     );
 
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
+
+    const request = getRequest(store.getState(), requestId);
+
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(req.options.url).toEqual('https://showme.wappsto.com');
     expect(req.status).toBe(201);
-    expect(req.options.method).toEqual('GET');
-    expect(req.json).toEqual(res);
+
+    expect(request.url).toEqual('https://showme.wappsto.com');
+    expect(request.method).toEqual('GET');
+    expect(request.status).toBe('success');
+    expect(request.json).toEqual(res);
   });
 
   it('can make a request with query', async () => {

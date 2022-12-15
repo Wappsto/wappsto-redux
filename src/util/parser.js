@@ -2,7 +2,7 @@ function parse(json) {
   if (!json) {
     return [];
   }
-  if (json.constructor === Object) {
+  if (json.constructor === Object && json.meta) {
     if (json.meta.type === 'idlist') {
       return [];
     }
