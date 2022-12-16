@@ -73,11 +73,14 @@ describe('request', () => {
     const res = {"file_id":"dc1695e7-346d-4e64-9dcf-29c562362042","status":"ok"};
     fetch.mockResponseOnce(JSON.stringify(res), { status: 201 });
 
+    let url = 'https://showme.wappsto.com/generate_report';
+    url += '?type=monthly&x_session=cce01ae3-3150-4811-9f47-3fec80d7aed0';
+
     const requestId = 1;
     const req = await store.dispatch(
       makeRequest({
         method: 'GET',
-        url: 'https://showme.wappsto.com/generate_report?type=monthly&x_session=cce01ae3-3150-4811-9f47-3fec80d7aed0',
+        url,
         id: requestId
       }),
     );
