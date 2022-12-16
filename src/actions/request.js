@@ -257,6 +257,9 @@ export function startRequest(dispatch, options, session) {
   }
 
   const checkResponse = (response) => {
+    if(!response) {
+      return response;
+    }
     delete pendingRequestsCache[pendingId];
     if (response.ok) {
       if (options.dispatchEntities !== false) {

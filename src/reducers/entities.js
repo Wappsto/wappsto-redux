@@ -18,6 +18,9 @@ function mergeUnique(arr1, arr2) {
 }
 
 function addEntity(state, type, data) {
+  if(!type) {
+    return { state, result: data.result};
+  }
   const newState = { ...state };
   const newData = normalize(data, schemas.getSchema(type));
   Object.keys(newData.entities).forEach((key) => {
@@ -39,6 +42,9 @@ function addEntities(state, type, data) {
 }
 
 function removeEntities(state, type, ids = []) {
+  if(!type) {
+    return { state, result: []};
+  }
   let newIds = ids;
   if (typeof ids === 'string') {
     newIds = [ids];
@@ -55,6 +61,9 @@ function removeEntities(state, type, ids = []) {
 }
 
 function removeAllEntities(state, type) {
+  if(!type) {
+    return { state, result: []};
+  }
   let newState = { ...state };
   const def = schemas.getSchemaTree(type);
   const entities = newState[def.name];
@@ -66,6 +75,9 @@ function removeAllEntities(state, type) {
 }
 
 function addChildEntities(state, type, id, child, data, reset = true) {
+  if(!type) {
+    return { state, result: data.result};
+  }
   let newData;
   let result;
   let newState = { ...state };
@@ -106,6 +118,9 @@ function addChildEntities(state, type, id, child, data, reset = true) {
 }
 
 function removeEntity(state, type, id) {
+  if(!type) {
+    return { state };
+  }
   let newState = { ...state };
   const def = schemas.getSchemaTree(type);
   const element = newState[def.name] && newState[def.name][id];
@@ -121,6 +136,9 @@ function removeEntity(state, type, id) {
 }
 
 function removeChildEntities(state, type, id, child, ids) {
+  if(!type) {
+    return { state, result: undefined};
+  }
   let result;
   const def = schemas.getSchemaTree(type);
   const element = state[def.name] && state[def.name][id];

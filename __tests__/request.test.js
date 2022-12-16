@@ -69,6 +69,34 @@ describe('request', () => {
     expect(request.json).toEqual(res);
   });
 
+  it('can make a request with full URL and query', async () => {
+    const res = {"file_id":"dc1695e7-346d-4e64-9dcf-29c562362042","status":"ok"};
+    fetch.mockResponseOnce(JSON.stringify(res), { status: 201 });
+
+    const requestId = 1;
+    const req = await store.dispatch(
+      makeRequest({
+        method: 'GET',
+        url: 'https://showme.wappsto.com/generate_report?type=monthly&x_session=cce01ae3-3150-4811-9f47-3fec80d7aed0',
+        id: requestId
+      }),
+    );
+
+    await new Promise((r) => {
+      setTimeout(r, 1);
+    });
+
+    const request = getRequest(store.getState(), requestId);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(req.status).toBe(201);
+
+    expect(request.url).toEqual('https://showme.wappsto.com/generate_report');
+    expect(request.method).toEqual('GET');
+    expect(request.status).toBe('success');
+    expect(request.json).toEqual(res);
+  });
+
   it('can make a request with query', async () => {
     const req = await store.dispatch(
       makeRequest({
