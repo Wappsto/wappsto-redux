@@ -358,7 +358,8 @@ export function overrideRequest(func) {
 
 export function cancelAllRequests() {
   Object.keys(pendingRequestsCache).forEach((key) => {
-    if (pendingRequestsCache[key].options.abortable !== false) {
+    if (pendingRequestsCache[key].options.abortable !== false &&
+        pendingRequestsCache[key].options.controller) {
       pendingRequestsCache[key].options.controller.abort();
     }
   });
