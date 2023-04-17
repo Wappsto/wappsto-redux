@@ -44,7 +44,7 @@
     "redux": "^4.2.1",
     "redux-thunk": "^2.4.2",
     "regenerator-runtime": "^0.13.11",
-    "reselect": "^4.1.7"
+    "reselect": "^4.1.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.21.0",
