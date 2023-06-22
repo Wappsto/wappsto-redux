@@ -11,6 +11,7 @@ describe('session', () => {
   let store;
   const jsonSession = {
     meta: {
+      type: 'session',
       id: 'bc09f773-001a-4c36-a7d9-bb6dfbfafc02',
     },
   };
@@ -68,5 +69,25 @@ describe('session', () => {
     await store.dispatch(limitReached());
     const session = getSession(store.getState());
     expect(session).toBe(null);
+  });
+
+  it('can handle an invalid session', async () => {
+    await store.dispatch(addSession(jsonSession));
+    let session = getSession(store.getState());
+    expect(session.meta.id).toBe('bc09f773-001a-4c36-a7d9-bb6dfbfafc02');
+    expect(session.valid).toBe(true);
+
+    await store.dispatch(
+      addSession({
+        meta: {
+          type: 'network',
+          id: '71263713-caad-42fe-bc98-310ed4e2ef67',
+        },
+      }),
+    );
+
+    session = getSession(store.getState());
+    expect(session.meta.id).toBe('bc09f773-001a-4c36-a7d9-bb6dfbfafc02');
+    expect(session.valid).toBe(true);
   });
 });

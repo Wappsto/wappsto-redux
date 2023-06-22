@@ -5,6 +5,9 @@ const initialState = null;
 function reducer(state = initialState, action = {}) {
   switch (action.type) {
     case ADD_SESSION:
+      if (action.data.meta.type !== 'session') {
+        return state;
+      }
       return { ...state, ...action.data, valid: true };
     case REMOVE_SESSION:
       return initialState;
