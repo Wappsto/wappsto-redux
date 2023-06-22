@@ -7,7 +7,7 @@ import {
   makeRequest,
   removeRequest,
   overrideRequest,
-  cancelAllRequests
+  cancelAllRequests,
 } from '../src';
 
 describe('request', () => {
@@ -42,7 +42,7 @@ describe('request', () => {
   });
 
   it('can make a request with full URL', async () => {
-    const res = {"file_id":"dc1695e7-346d-4e64-9dcf-29c562362042","status":"ok"};
+    const res = { file_id: 'dc1695e7-346d-4e64-9dcf-29c562362042', status: 'ok' };
     fetch.mockResponseOnce(JSON.stringify(res), { status: 201 });
 
     const requestId = 1;
@@ -50,7 +50,7 @@ describe('request', () => {
       makeRequest({
         method: 'GET',
         url: 'https://showme.wappsto.com',
-        id: requestId
+        id: requestId,
       }),
     );
 
@@ -70,7 +70,7 @@ describe('request', () => {
   });
 
   it('can make a request with full URL and query', async () => {
-    const res = {"file_id":"dc1695e7-346d-4e64-9dcf-29c562362042","status":"ok"};
+    const res = { file_id: 'dc1695e7-346d-4e64-9dcf-29c562362042', status: 'ok' };
     fetch.mockResponseOnce(JSON.stringify(res), { status: 201 });
 
     let url = 'https://showme.wappsto.com/generate_report';
@@ -81,7 +81,7 @@ describe('request', () => {
       makeRequest({
         method: 'GET',
         url,
-        id: requestId
+        id: requestId,
       }),
     );
 

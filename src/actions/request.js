@@ -70,7 +70,7 @@ function splitUrlAndOptions(url, options) {
 function getUrlWithQuery(url, options) {
   const { service } = getUrlInfo(url);
   const version = options.version || getServiceVersion(service);
-  if(url.startsWith('http')) {
+  if (url.startsWith('http')) {
     return url;
   }
   let result = config.baseUrl + (version ? `/${version}` : '') + url;
@@ -257,7 +257,7 @@ export function startRequest(dispatch, options, session) {
   }
 
   const checkResponse = (response) => {
-    if(!response) {
+    if (!response) {
       return response;
     }
     delete pendingRequestsCache[pendingId];
@@ -358,8 +358,10 @@ export function overrideRequest(func) {
 
 export function cancelAllRequests() {
   Object.keys(pendingRequestsCache).forEach((key) => {
-    if (pendingRequestsCache[key].options.abortable !== false &&
-        pendingRequestsCache[key].options.controller) {
+    if (
+      pendingRequestsCache[key].options.abortable !== false &&
+      pendingRequestsCache[key].options.controller
+    ) {
       pendingRequestsCache[key].options.controller.abort();
     }
   });
