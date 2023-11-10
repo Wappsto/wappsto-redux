@@ -37,7 +37,7 @@
     "node": ">=16"
   },
   "dependencies": {
-    "deep-equal": "^2.2.1",
+    "deep-equal": "^2.2.3",
     "normalizr": "^3.6.2",
     "query-string": "^7.1.3",
     "react": "^18.1.0",
